@@ -4,6 +4,7 @@
 #define XTSTRINGDEFINES
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #if !defined(__linux__)
@@ -40,6 +41,8 @@ extern int plotted, needmove;
 extern int xold, yold, xnew, ynew;
 
 void dump(int, int, int, int);
+void line(), setfat(), init_color(), color(), drawpath(), clipreg(),
+    closepl(), error(), erase();
 
 #define DRAW_PATH		1
 #define FILL_PATH		2

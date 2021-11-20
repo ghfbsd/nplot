@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "xplot.h"
 
+void
 line()	/* draw a line */
 {
     register int i;

@@ -39,6 +39,7 @@ putpoint(x, y)
 /* drawpath
  * Draw the current path
  */
+void
 drawpath()
 {
 

@@ -12,11 +12,11 @@ int rwidth, rheight;
 /* This is supposed to set up the X window stuff, by creating a
    widget, in which the image is to be put in a background pixmap. */
 
-main(argc,argv)
+int main(argc,argv)
 int argc;
 char **argv;
 {
-	int i, dimset = 0, narg, ppi = 85, x, y;
+	int i, dimset = 0, narg, ppi = 85, x, y, is_scale();
 	char *ptr, *file = NULL;
 	Widget child;
 	Arg wargs[20];
@@ -113,13 +113,13 @@ char **argv;
 
 
 	/* Parse and set up fatness limit */
-	if (ptr = XGetDefault(dpy,"xplot","fatlimit")){
+	if ((ptr = XGetDefault(dpy,"xplot","fatlimit"))){
 	   fatlim = atoi(ptr);
 	   fatlim = fatlim < 0 ? 0 : fatlim;
 	}
 
 	/* Parse and set up window geometry */
-	if (ptr = XGetDefault(dpy,"xplot","geometry")){
+	if ((ptr = XGetDefault(dpy,"xplot","geometry"))){
 	   /* Got geometry string, parse it */
 	   int flags;
 	   unsigned int x_w,y_w;
@@ -185,8 +185,10 @@ char **argv;
 	gp.sg_flags = old;
 	stty(fd,&gp);
 #endif
+        return 0;
 }
 
+void
 closepl()
 {
 	XFreeGC(dpy,gc);
@@ -194,6 +196,7 @@ closepl()
 	XtDestroyWidget(toplevel);
 }
 
+void
 error(s)
 register char *s;
 {
@@ -202,6 +205,7 @@ register char *s;
    exit(1);
 }
 
+void
 erase()
 /* Erase clears pixmap and window */
 {
@@ -216,12 +220,14 @@ erase()
 
 /* Dummy routines to keep SunOS4.1.3 libraries happy.  They are apparently
    improperly linked, leaving references to these not-really-external symbols */
-int get_wmShellWidgetClass()
+__attribute__((noreturn)) void
+get_wmShellWidgetClass()
 {
    error("Call to get_wmShellWidgetClass"); 
 }
 
-int get_applicationShellWidgetClass()
+__attribute__((noreturn)) void
+get_applicationShellWidgetClass()
 {
    error("Call to get_applicationShellWidgetClass"); 
 }

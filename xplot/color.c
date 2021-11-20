@@ -13,6 +13,7 @@ static unsigned int pixel[MAPSIZE];
 int fakecolor = 0;
 int colorinit = 1;
 
+void
 init_color()
 {
     register int i;
@@ -49,6 +50,7 @@ init_color()
 
 }
 
+void
 color()
 {
     register int i;

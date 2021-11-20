@@ -18,7 +18,7 @@ LDJUNK =
 
 # Following are for Linux systems
 # XLIBS=	-L/usr/X11/lib -lXaw -lXmu -lXext -lXt -lX11 -lm
-# CFLAGS = -g -I/usr/include/X11
+# CFLAGS = -g -I/usr/include/X11 -Wno-implicit
 
 # Following are for Darwin systems
 XLIBS=	-L/usr/X11R6/lib -lXaw -lXmu -lXext -lXt -lX11 -lm
@@ -67,9 +67,8 @@ lint:
 depend:
 	cat </dev/null >x.c
 	for i in *.c ; do \
-		(/bin/grep '^#[ 	]*include' x.c $$i | sed \
+		(/usr/bin/grep '^#[ 	]*include' x.c $$i | sed \
 			-e '/\.\.\/h/d' \
-			-e 's,<\(.*\)>,"/usr/include/\1",' \
 			-e 's/:[^"]*"\([^"]*\)".*/: \1/' \
 			>>makedep); done
 	echo '/^# DO NOT DELETE THIS LINE/+2,$$d' >eddep
@@ -86,48 +85,62 @@ depend:
 
 # DO NOT DELETE THIS LINE -- make depend uses it
 # DEPENDENCIES MUST END AT END OF FILE
-area.o: /usr/include/stdio.h
+area.o:#include <stdio.h>
 area.o: xplot.h
 area.o: pat.h
-circshad.o: /usr/include/stdio.h
+circshad.o:#include <stdio.h>
 circshad.o: xplot.h
 circshad.o: pat.h
-clip.o: /usr/include/stdio.h
+clip.o:#include <stdio.h>
 clip.o: xplot.h
-color.o: /usr/include/stdio.h
+color.o:#include <stdio.h>
 color.o: xplot.h
 color.o: pat.h
-doplot.o: /usr/include/stdio.h
-doplot.o: /usr/include/ctype.h
-doplot.o: /usr/include/strings.h
+doplot.o:#include	<stdio.h>
+doplot.o:#include	<ctype.h>
+doplot.o:#include	<strings.h>
 doplot.o: xplot.h
-dump.o: /usr/include/stdio.h
+doplot.o:#include <limits.h>
+doplot.non-sgi.o:#include	<stdio.h>
+doplot.non-sgi.o:#include	<ctype.h>
+doplot.non-sgi.o:#include	<strings.h>
+doplot.non-sgi.o: xplot.h
+dump.o:#include <stdio.h>
 dump.o: xplot.h
-externs.o: /usr/include/stdio.h
+externs.o:#include <stdio.h>
 externs.o: xplot.h
-font.o: /usr/include/stdio.h
-font.o: /usr/include/string.h
+externs.non-sgi.o:#include <stdio.h>
+externs.non-sgi.o: xplot.h
+font.o:#include <stdio.h>
+font.o:#include <string.h>
 font.o: font.h
 font.o: chars.h
-is_scale.o: /usr/include/stdio.h
-is_scale.o: /usr/include/ctype.h
+is_scale.o:#include	<stdio.h>
+is_scale.o:#include	<ctype.h>
 is_scale.o: xplot.h
-line.o: /usr/include/stdio.h
+line.o:#include <stdio.h>
 line.o: xplot.h
-paths.o: /usr/include/stdio.h
+paths.o:#include <stdio.h>
 paths.o: xplot.h
-pattern.o: /usr/include/stdio.h
+pattern.o:#include <stdio.h>
 pattern.o: xplot.h
 pattern.o: pat.h
-putsym.o: /usr/include/stdio.h
+pattern.non-sgi.o:#include <stdio.h>
+pattern.non-sgi.o: xplot.h
+pattern.non-sgi.o: pat.h
+putsym.o:#include <stdio.h>
 putsym.o: xplot.h
 putsym.o: font.h
-setfat.o: /usr/include/stdio.h
+setfat.o:#include <stdio.h>
 setfat.o: xplot.h
-setshad.o: /usr/include/stdio.h
+setshad.o:#include <stdio.h>
 setshad.o: xplot.h
 setshad.o: pat.h
 xplot.o: xplot.h
+xplot.o:#include <X11/Xaw/Label.h>
+xplot.o:#include <sys/termios.h>
+xplot.non-sgi.o: xplot.h
+xplot.non-sgi.o:#include <X11/Xaw/Label.h>
 # DEPENDENCIES MUST END AT END OF FILE
 # IF YOU PUT STUFF HERE IT WILL GO AWAY
 # see make depend above

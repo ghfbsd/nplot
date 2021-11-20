@@ -438,7 +438,7 @@ translate(string,fstring,code)
       font;
 
    /* Scan across characters in the string */
-   while (c = *cp) {
+   while ((c = *cp)) {
       if (c == esc) {
 	 /* Old-style escape character.  Turn old-style code into a new
 	    one. */

@@ -2,7 +2,17 @@
 #include "xplot.h"
 
 /* set the line thickness to newfat */
-int setfat(newfat)
+
+void
+faterr(bad, good)
+    int bad, good;
+{
+    fprintf(stderr, 
+       "%s: line thickness of %d out of range; set to %d\n", progname, bad, good);
+}
+
+void
+setfat(newfat)
     int newfat;
 {
     if (newfat < 0) {
@@ -25,11 +35,4 @@ int setfat(newfat)
      * This would be too hard, so we'll cheat
      */
     needmove = 1;
-}
-
-faterr(bad, good)
-    int bad, good;
-{
-    fprintf(stderr, 
-       "%s: line thickness of %d out of range; set to %d\n", progname, bad, good);
 }
