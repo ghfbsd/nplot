@@ -1,0 +1,78 @@
+.TH VPUTH 3S "NU Geology" "February 15, 1988"
+.SH NAME
+vputh, sputh, vputw, sputw \- put half-word or word on a stream
+.SH SYNOPSIS
+.B #include <stdio.h>
+.PP
+.B int vputh(i, stream)
+.br
+.B int i;
+.br
+.SM
+.B FILE
+.B *stream;
+.PP
+.B int sputh(i, stream)
+.br
+.B int i;
+.br
+.SM
+.B FILE
+.B *stream;
+.PP
+.B int vputw(i, stream)
+.br
+.B int i;
+.br
+.SM
+.B FILE
+.B *stream;
+.PP
+.B int sputw(i, stream)
+.br
+.B int i;
+.br
+.SM
+.B FILE
+.B *stream;
+.SH DESCRIPTION
+.I Vputh
+appends a two-byte representation of the integer
+.I i
+to the named output
+.IR stream .
+The integer is stored in the backwards VAX format (low byte, high byte).
+.PP
+.I Sputh
+appends a two-byte representation of the integer
+.I i
+to the named output
+.IR stream ,
+stored in the SUN format (high byte, low byte).
+.PP
+.I Vputw
+appends a four-byte representation of the integer
+.I i
+to the named output
+.IR stream .
+The integer is stored in the backwards VAX format (low byte, ..., high byte).
+.PP
+.I Sputw
+appends a four-byte representation of the integer
+.I i
+to the named output
+.IR stream ,
+stored in the SUN format (high byte, ..., low byte).
+.PP
+These functions are obtained with the
+.B \-lloc
+option to the compiler or loader.
+The functions neither assume nor cause special alignment in the file.
+.SH "SEE ALSO"
+fopen(3S),
+fclose(3S),
+vgeth(3S),
+fread(3S)
+.SH DIAGNOSTICS
+These functions return zero upon success, and nonzero if an error has
+occurred.

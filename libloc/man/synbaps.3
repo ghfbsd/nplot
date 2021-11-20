@@ -1,0 +1,70 @@
+.TH SYNBAPS 3X "NU Geology" "February 15, 1988"
+.SH NAME
+synbaps \- FORTRAN \- callable routine to read in a portion of the SYNBAPS
+worldwide bathymetry data.
+.SH SYNOPSIS
+.B INTEGER FUNCTION Synbaps
+.PP
+.B ier =  synbaps(array, xdim, lon1, lon2, lat1, lat2)
+.PP
+.B real array(xdim, *)
+.PP
+.B integer ier, xdim, lon1, lon2, lat1, lat2
+.SH DESCRIPTION
+.I Synbaps
+allows a FORTRAN program to read in portions of the SYNBAPS worldwide
+bathymetry data, which is stored in a compressed form in the file
+``/usr3/topog/synbaps''.  The calling program passes
+.I synbaps
+a real array in which to store the data, an integer giving the X dimension of
+the array, and four integers which denote the corners of the area to read.
+.PP
+The data file contains elevations in meters
+on a 5 minute square grid for the entire
+globe.  The depths are expressed as negative elevations.  Currently, the
+elevation for all land masses is set to +10 meters.
+.SH ARGUMENTS
+.I Array
+is a two-dimensional array of REALs large enough to hold the elevation data for
+the requested area.  This means it must be at least
+((\fILon2\-Lon1\fR)*12+1) by ((\fILat2\-Lat1\fR)*12+1)
+in length, since there are 12 five-minute
+intervals per degree, and there are extra points at the edges.
+.PP
+.I Xdim
+is the X dimension of
+.I array
+exactly as it was declared in the calling program.
+.PP
+\fILon1\fR and
+\fIlon2\fR are integers which specify the longitudes of the left and
+right sides of the are for which data is desired, respectively.
+.PP
+Both must be in the range \-360 \- +360.
+.I Synbaps
+is smart enough to handle areas that cross the prime meridian, as well as areas
+for which \fIlat2\fR < \fIlat1\fR.
+.PP
+\fILat1\fR and \fIlat2\fR are the latitudes of the bottom and top of the area.
+They must be in the range \-90 \- +90, and \fIlat1\fR must be less than
+\fIlat2\fR.
+.SH FILES
+/usr3/topog/synbaps
+.SH DIAGNOSTICS
+.I Synbaps
+returns zero if everything goes well.  If there is an error,
+.I synbaps
+prints an error message and returns an error code as follows:
+.in +0.5i
+.ta 1.5i
+.nf
+-1	Latitudes must be in range -90 \- +90.
+-2	\fILat1\fR must be less than \fIlat2\fR.
+-3	Longitudes must be in range -360 \- +360.
+-4	The SYNBAPS data file could not be opened.
+-5	Xdim is not large enough.
+-6	An error occurred while reading the data.
+.fi
+.in
+.SH AUTHOR
+John Werner, February 1988

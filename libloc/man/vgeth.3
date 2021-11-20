@@ -1,0 +1,82 @@
+.TH VGETH 3 "NU Geology" "February 15, 1988"
+.SH NAME
+vgeth, sgeth, vgetw, sgetw \- get half-word or word from stream
+.SH SYNOPSIS
+.B #include <stdio.h>
+.PP
+.B int vgeth(stream)
+.br
+.SM
+.B FILE
+.B *stream;
+.PP
+.B int sgeth(stream)
+.br
+.SM
+.B FILE
+.B *stream;
+.PP
+.B int vgetw(stream)
+.br
+.SM
+.B FILE
+.B *stream;
+.PP
+.B int sgetw(stream)
+.br
+.SM
+.B FILE
+.B *stream;
+.SH DESCRIPTION
+.I Vgeth
+returns the next two-byte integer from the named input
+.IR stream .
+The integer is assumed to be stored in the backwards
+VAX-11 format (low byte, high byte).
+.PP
+.I Sgeth
+also returns a two-byte integer from the named input
+.IR stream .
+The integer is assumed to be stored in the normal SUN byte ordering
+(high byte, low byte).
+.PP
+.I Vgetw
+returns the next 4-byte integer from the named input
+.IR stream .
+The integer is stored with the backwards
+VAX byte ordering (low byte, ..., high byte).
+.PP
+.I Sgetw
+returns the next 4-byte integer from the named input
+.IR stream .
+The integer is stored with the SUN byte ordering (high byte, ..., low byte).
+.PP
+These functions are obtained with the
+.B \-lloc
+option to the compiler or loader.
+None of the functions assume any special alignment in the input file.
+.SH "SEE ALSO"
+clearerr(3S),
+fopen(3S),
+getc(3S),
+scanf(3S),
+fread(3S),
+.SH DIAGNOSTICS
+These functions return the integer constant
+.SM
+.B EOF
+at end of file, upon read error,
+or if an attempt is made to read a file not opened by
+.IR fopen .
+Because
+.B EOF
+is a valid integer, however,
+.IR ferror (3S)
+should be used to check the success of any of these functions.
+.br
+The end-of-file condition is remembered,
+even on a terminal,
+and all subsequent attempts to read will return
+.B EOF
+until the condition is cleared with
+.IR clearerr (3S).
