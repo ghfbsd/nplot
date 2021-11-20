@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <strings.h>
+#include <string.h>             /* added string.h 2021-08-29 crb */
 #include "nplot.h"
 #include "font.h"
 
@@ -23,6 +24,7 @@ struct txtinfo {		/* Information about current text font */
 
 enum sticode {tcopy, tsize, tfont, torient, theight};
 
+void draw(), form(), convert(), fatcheck();
 
 /* External variables defined herein */
 
@@ -189,6 +191,7 @@ c
 
 	char *getenv();
 	void pltext(),
+             plpoly(),	       /* added plpoly() 2021-08-29 crb */
 	     gettxtinfo(),
 	     settxtinfo();
 
@@ -711,6 +714,7 @@ fmag(x,xmag)
 }
 
 #define MAXVERT 200
+void
 plpoly(ix,iy,ik,ipsymb,shad)
     int shad,ik;
     short ix,iy;
@@ -853,6 +857,7 @@ plpoly(ix,iy,ik,ipsymb,shad)
     (void) vputh(vert[0][1], plotfile);
 }
 
+void
 draw(cc,ix,iy)
 	char cc ;
 	short ix,iy;
@@ -862,6 +867,7 @@ draw(cc,ix,iy)
 	vputh(iy, plotfile);
 }
 
+void
 form(x,str,l)
 	float x ;
 	int *l ;
@@ -928,6 +934,7 @@ nmove_(x,y,para)
 	return(0);
 }
 
+void
 convert(x, y, ix, iy, para)	/* convert point to local coordinates */
 	float *x, *y, *para;
 	short *ix, *iy;
@@ -943,6 +950,7 @@ convert(x, y, ix, iy, para)	/* convert point to local coordinates */
 }
 
 /* see if line thickness has changed */
+void
 fatcheck(para)
 	float *para;
 {

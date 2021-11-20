@@ -9,9 +9,9 @@
 # Use code optimizers
 FC = gfortran
 FFLAGS = -O -m32
-FFLAGS = -g
+FFLAGS = -g -finit-local-zero
 CFLAGS = -O
-CFLAGS = -g
+CFLAGS = -g -Wno-implicit
 
 OBJS=	nplot.o const.o geth.o getw.o nshad.o npat.o ncolor.o puth.o putw.o font.o
 LIB=	libnplot
@@ -50,7 +50,7 @@ ${LIB64}:
 install-lib: ${LIB32} ${LIB64}
 	for f in ${LIB32} ${LIB64} ; do \
 	   install -m 775 -o ${OWNER} -g ${GROUP} $$f ${DEST} ; \
-	   ranlib ${DEST}/$f ; \
+	   ranlib ${DEST}/$$f ; \
 	done
 
 fonts:

@@ -53,7 +53,7 @@ c string in as. input m is number of decimal places
 c desired.
 c
 c
-      character*1 as(80),xs(80),ds(20)
+      character*1 as(80),xs(80),ds(80)
       call nform(x,ds,m,l)
       do 7 i = 1, l
     7 xs (i) = ds(i)
