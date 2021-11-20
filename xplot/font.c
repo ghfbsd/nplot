@@ -195,7 +195,6 @@ getfont(code)
       
    /* Not already loaded.  Read in from the font file. */
    {
-      char *malloc();
       char filename[256], file_type_r = 'r';
       struct fontdescr *new;
       int ich;
