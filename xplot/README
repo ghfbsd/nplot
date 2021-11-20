@@ -1,0 +1,66 @@
+RATIONALE
+
+   Why xplot, when we already have so many graphics programs?
+Well, first of all it is a simple, straightforward, plot (5)
+filter. No fancy buttons or options or silly syntax. Mostly just
+a plain old filter. However, it is implemented as an Athena
+Labelwidget, so of course all the usual XToolkit options are
+available.
+   When first called, it immediately brings up a blank window,
+and as plot(5) data appears on the input stream it draws
+the stuff right away (it uses CBREAK mode). This means it
+can be used either interactively, with a pipe, or with
+a preprocessed file.  Xplot draws in the background
+pixmap of the window, so that redrawing is very fast (compared
+with an xterm tektronix window for example). The disadvantage
+of this, of course (there had to be one) is that on resizing,
+the plot does not resize with the window, but retains its
+original shape (it is properly centered though). Xplot is in general
+much more convenient than the standard Tek window, since several
+different windows can be maintained at once, to compare different
+sets of data, for example.  You do not lose control of your
+window while gazing at a plot.  Each xplot window is destroyed
+by a mouse button press anywhere in it, but not until EOF has been
+reached on the input stream.
+
+Written by Arthur Smith (Lassp, Cornell University).
+Modified from X distribution by G. Helffrich/U. Bristol, May 1994; March 1997.
+
+DIFFERENCES FROM SUNPLOT
+
+1.  -b option (reverse video) implemented using X -rv option.
+
+BUGS, WISH LIST and THINGS TO DO
+
+1.  Default file name from X resources database (for example, ./pltfil)
+
+INSTALLATION NOTES
+
+A Makefile exists.  You should only need to change various defines in it
+to make the code and documentation.  The relevant defines are:
+
+DEST - 
+   destination for object code for 'make install', defaults to /usr/local/bin
+LIB -
+   nplot font library, which should be the the same as that defined in the
+   make file for the nplot subroutine.  Defaults to /usr/local/lib.
+OWNER -
+GROUP -
+   ownership for files installed by 'make install'
+LDJUNK -
+   may not be necessary, but overcomes a bug in some versions of SunOS which
+   ignores all but the first component in the LD_LIBRARY_PATH environment
+   variable (see the man page for the 'ld' command if you don't know what this
+   variable does).
+ 
+CFLAGS = -g -I/usr/openwin/include
+   you may wish to change the -g to -O before you make install, which renders
+   the program undebuggable (debuggability is only desirable for system
+   developers).  The text following -I should be the path for your X include
+   files.  Set -DSGI -xansi if you are compiling with the Silicon Graphics
+   IRIX Unix variant.
+
+Please notify me of any installation problems and bugs.
+
+George Helffrich/U. Bristol
+george@geology.bristol.ac.uk

@@ -1,0 +1,19 @@
+#! /bin/sh
+files='
+grey1.5.b
+grey1.b
+grey2.b
+grey3.b
+grey4.b
+grey5.b
+grey6.b
+'
+cp /dev/null pats.c
+
+if [ ! -f makepat ]; then
+   cc -o makepat makepat.c
+fi
+
+for i in $files ; do
+   makepat < $i >> pats.c
+done

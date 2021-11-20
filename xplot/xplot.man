@@ -1,0 +1,143 @@
+.TH XPLOT 1 "19 May 1994" "X Version 11"
+.SH NAME
+xplot - X plot filter
+.SH SYNOPSIS
+.B xplot
+[-\fItoolkitoption\fP ...] [-option ...]
+.SH DESCRIPTION
+The
+.I xplot 
+program brings up a window for viewing pltfil(5) output, for example
+from the
+.I map
+program.
+The program works interactively, continuing to
+accept input from stdin and plotting as it goes, until it reaches
+an end of file, at which point it waits around for a mouse button
+press to kill the window.
+.SH OPTIONS
+.I Xplot
+accepts all of the standard X toolkit command line options, and the initial
+geometry specification determines the resolution, with a default dimension
+of a US Letter piece of paper in landscape orientation.
+.PP
+In addition to the standard X Toolkit command line arguments (see below),
+.I xplot
+also recognizes:
+.TP 8
+.B \-v
+plot in vertical (or portrait) orientation.
+.TP 8
+.B \-t
+use built-in X fonts instead of nplot fonts.
+.TP 8
+.B \-<num>x
+horizontal scale factor for plot.
+.TP 8
+.B \-<num>y
+vertical scale factor for plot.
+.TP 8
+.B \-<num>
+horizontal and vertical scale factor for plot.
+.PP
+The following standard X Toolkit command line arguments may be used with 
+.I xplot:
+.TP 8
+.B \-bg \fIcolor\fP
+This option specifies the color to use for the background of the window.  
+The default is \fIwhite\fP.
+.TP 8
+.B \-bd \fIcolor\fP
+This option specifies the color to use for the border of the window.
+The default is \fIblack\fP.
+.TP 8
+.B \-bw \fInumber\fP
+This option specifies the width in pixels of the border surrounding the window.
+.TP 8
+.B \-fg \fIcolor\fP
+This option specifies the color to use for displaying text.  The default is 
+\fIblack\fP.
+.TP 8
+.B \-fn \fIfont\fP
+This option specifies the font to be used for displaying normal text.  The
+default is \fI6x10\fP.
+.TP 8
+.B \-rv
+This option indicates that reverse video should be simulated by swapping
+the foreground and background colors.
+.TP 8
+.B \-geometry \fIgeometry\fP
+This option specifies the preferred size and position of the window.
+.TP 8
+.B \-display \fIhost\fP:\fIdisplay\fP
+This option specifies the X server to contact.
+.TP 8
+.B \-xrm \fIresourcestring\fP
+This option specifies a resource string to be used.
+.SH X DEFAULTS
+This program uses the 
+.I Label
+widget in the X Toolkit.  It understands all of the core resource names and
+classes as well as:
+.PP
+.TP 8
+.B width (\fPclass\fB Width)
+Specifies the plot window width.  The default width is US Letter paper
+length. 
+.TP 8
+.B height (\fPclass\fB Height)
+Specifies the window height.  The default height is US letter paper width.
+.TP 8
+.B reverseVideo (\fPclass\fB ReverseVideo)
+Specifies that the foreground and background colors should be reversed.
+.TP 8
+.B fatlimit
+limits the line fatness.
+If not specified, this defaults to 2.
+Lines fatter than 20 are considered to be errors.
+.PP
+The
+.I xplot
+class is "xplot", so various defaults may be set through the X resource
+mechanism.
+In particular, the default window geometry may be specified using the
+"xplot.geometry" resource, and "xplot.fatlimit" similarly specifies the
+limiting line width.
+.PP
+Recognized X actions are:
+.TP 8
+.B next()
+which proceeds to the next plot in a multi-plot plot file (or ends the program
+if the last plot in the file).
+This is the default action if the return key or the "n" key is pressed in the
+window.
+.TP 8
+.B quit()
+which terminates the program.
+This is the default action if one of the mouse buttons or the "q" key is
+pressed.
+.PP
+The default translations for
+.B xplot
+are, therefore,
+.nf
+	   <Key>n:      next()
+	   <Key>Return: next()
+	   <Key>q:      quit()
+	   <BtnDown>:   quit()
+.fi
+.SH "SEE ALSO"
+X(1), plot(5), Athena Label widget
+.SH BUGS
+.I xplot
+works fine. No bugs at all. Right. Actually there are several things
+that ought to be changed, for example the reversed byte order in
+plot(5) format (NOT MY FAULT), and maybe it will soon be extended
+to the superplot format (I'll have to look over that stuff carefully
+though), and probably also to return mouse position and anything
+else the locals feel they need.
+.PP
+.SH AUTHORS
+.nf
+Arthur Smith (Lassp, Cornell University)
+George Helffrich (U. Bristol)
