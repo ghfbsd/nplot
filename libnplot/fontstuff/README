@@ -1,0 +1,19 @@
+This directory contains the fonts that nplot and friends use for plotting.
+
+The font files are named, fontxxx, where xxx is a code giving the font
+number.  The coding of the fonts in given in the subroutine nfont, defined
+in the 'font.c' module of nplot.
+
+The files named fontxxx.def are a font definition, in human-readable form.
+These files are read by buildfont and transformed into a fontxxx file.
+
+To build a font, catenate the Hershey fonts into a single stream and
+for input to buildfont, along with the fontxxx file and the fontxxx.def
+file as such:
+   cat Hershey_fonts/hersh.oc* | buildfont font001 font001.def
+This will produce the font file 'font001' from the definition given by
+'font001.def'.
+
+The Hershey fonts, as received, contain at least one error.  To date, the
+errors found so far are:
+  3010 (cap J) - right-hand width was wrong; should be Z (+8) not J (-8)

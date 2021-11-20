@@ -1,0 +1,583 @@
+.TH NPLOT 3X "NU Geological Sciences" "9 May 1988"
+.SH NAME
+nplot, nline, nmove, nfont, nlabel, plabel, const, conum, conzro, nadjus, nform 
+\- assorted plotting routines callable from FORTRAN and Pascal programs.
+.SH SYNOPSIS
+.B call nplot(n,x,y,xs,ys,title,para)
+.br
+.B integer n
+.br
+.B real x(n),y(n),para(20)
+.I or
+.B para(22)
+.br
+.B character xs(m1),ys(m2),title(m3)
+.PP
+.B call nmove(x,y,para)
+.br
+.B real x,y,para(20)
+.PP
+.B call nline(x,y,para)
+.br
+.B real x,y,para(20)
+.PP
+.B call nlabel(xp,yp,s,para)
+.br
+.B call plabel(xp,yp,s,para)
+.br
+.B real xp,yp,para(20)
+.br
+.B character s(m4)
+.PP
+.B call const(s,t)
+.br
+.B character s(m5),t(m6)
+.PP
+.B call conum(s,x,p)
+.br
+.B character s(m7)
+.br
+.B real x
+.br
+.B integer p
+.PP
+.B call conzro(s,m)
+.br
+.B character s(m)
+.br
+.B integer m
+.PP
+.B call nadjus(s,l)
+.br
+.B character s(m8)
+.br
+.B integer l
+.PP
+.B call nform(x,s,p,l)
+.br
+.B character s(m9)
+.br
+.B real x
+.br
+.B integer l,p
+.PP
+.B call nshad(n,x,y,mask,para)
+.br
+.B integer n, mask
+.br
+.B real x, y, para
+.PP
+.B call npat(n,x,y,pat,para)
+.br
+.B integer n, pat
+.br
+.B real x, y, para
+.PP
+.B call ncolor(icol, para)
+.br
+.B integer icol
+.br
+.B real para
+.PP
+.B call nrgb(ired, igreen, iblue, para)
+.br
+.B integer ired, igreen, iblue
+.br
+.B real para
+.PP
+.B ifont = nfont(s)
+.SH DESCRIPTION
+These subroutines allow FORTRAN and Pascal
+programs to interact with the plotting package
+.IR plotfil (5).  
+The plot files produced by the subroutines are then 
+interpreted and drawn on devices by the programs
+.IR ipen (1),
+.IR vtek (1),
+and
+.IR stek (1).
+.PP
+These subroutines are included in with the program with the loader option
+.BR \-lnplot .
+.PP
+.I Nplot 
+prepares plotfiles of the form of 
+.IR plotfil (5).
+A single call to
+.I nplot
+will scale the
+.I n
+data points in arrays
+.IR x \ and\  y
+and will write in the plotfile
+instructions to plot a line or character plot of  
+the values in
+.IR x \ and\  y ,
+axes, labels, and gridmarks.
+.I Nplot
+uses the contents  of string
+.I xs
+to label the x-axis, the contents of string
+.I ys
+to label the y-axis, and the contents of string
+.I title
+to label the graph.  The default plotfile name is ``pltfil''.  
+However, this default name can be overriden by either the subroutine caller 
+(see
+.IR para (20),
+below) or by the user of the program.  If the shell environment variable
+``pltfil'' is defined, its value is taken as the name of the plot file which is
+written by
+.I nplot .
+.PP
+Labels which are supplied to
+\fInplot\fR, \fInlabel\fR, or \fIplabel\fR can contain font changes, 
+special characters which produce subscripts, superscripts, and 
+most of the characters \fItroff\fP knows of.  For a catalog of 
+these characters, see the
+.IR plotfil (5)
+description and the ``Nroff/Troff User's Manual''.
+.PP
+Subsequent calls to
+.I nplot
+use the information stored in
+.I para
+to plot
+.IR x \ and\  y
+on the same graph;
+.IR xs ,\  ys ,\ and\  title
+are ignored.  By resetting
+.IR para (12)
+a new plot is
+started; the previous size, grid step, labels, 
+.IR etc .,
+are preserved until the appropriate elements of
+.I para
+are reset.
+.I Para
+has useful defaults:  calling
+it the first time with all its elements equal to 0.0 sets up
+useful scales.
+The contents of
+.I para
+are:
+.TP
+.B 1,2:
+Size (in inches).      \fIDefault Values:\fR   5.5,  5.5.
+.TP
+.B 3,4:
+Minimum values (x and y).
+.TP
+.B 5,6:
+Maximum values (x and y).
+.TP
+.B 7,8:
+Starting grid values (x and y).
+.TP
+.B 9,10:
+Grid increments (x and y).
+.TP
+.B 11:
+Character size for labels.      \fIDefault Value:\fR   8.0; this produces
+upper-case letters and digits approximately 4 mm tall.  Giving a nonzero
+value to this parameter at the initial call to \fInplot\fP offsets the plot
+from the bottom left hand corner of the page.  The font used for the
+labels can be selected by multiplying the font code returned by
+\fInfont\fP by 1000.0 and adding it to the size value, \fIe.g.\fP
+.nf
+	para(11) = 1000.0*nfont('R') + 8.0
+.fi
+results in labels having the Roman font with size 8.
+.TP
+.B 12:
+If equal to 0.0, set defaults and plot new axes.  This value can
+be set to zero to begin a new plot, which follows the previous one in the
+plot file.
+.TP
+.B 13:
+Value of point symbol.  Setting
+.IR para (13)
+equal to 0.0 gives a line plot.  Positive values
+give a character plot with a symbol specified by the ASCII
+representation of the value of
+.IR para (13); 
+see \fIman ASCII \fR for full documentation; the commonly used
+symbols are: \fB*\fR = 42.; \fB+\fR = 43.;
+\fBo\fR = 111.; \fB.\fR = 46.; \fBx\fR (sans-serifed) = 120.
+.sp 0.25
+Negative values give a character plot with a solid polygonal symbol;
+currently defined symbols are:  -1.[upward-pointing equilateral triangle],
+-2.[downward-pointing triangle], -3.[rightward-pointing triangle],
+-4.[leftward-pointing triangle], -5.[square], -6.[diamond], -7[hexagon],
+-8.[circle], -9.[plus], -10.[cross], any other negative value[circle].
+If -16. is added to any of these values,
+the symbol is plotted in outline (hollow) rather than as a solid symbol.
+.TP
+.B 14:
+Size of point symbol (character or polygon).
+\fIDefault Value:\fR  2.0 .  Note that this value is adequate for
+plotting symbols (\fIi.e., para \fR(13) < 0.), but produces very small characters
+(\fIe.g., \fR+, *); a value of 5.0 is preferable to enhance legibility.  
+Note also that the actual \fIsize\fR of the symbol on the plot is \fBnot the same\fR depending whether
+\fIpara\fR (13) is >0 or <0 !.
+On a line plot
+.RI ( i.e., \ with\  para (13)
+equal to 0.0),
+the value of
+.IR para (14)
+is generally irrelevant.  However, if a line plot is called
+.RI ( para (13)
+equal to 0.0) while
+.IR para (14)
+has a negative value,
+.I nplot
+enters
+.B "extended mode."
+.I Nplot
+will generate a diagnostic message stating that it is operating in
+extended mode; it will assume that
+.I para
+is a real array dimensioned to 22 rather than 20, and the plotting of
+dashed lines will then become possible, as described below under
+.IR para (21)
+and
+.IR para (22).
+.TP
+.B 15:
+Additional thickness of lines and characters.
+The normal line thickness is one, so the thickness actually
+drawn is 1 +
+.IR para (15).
+Note that a nonzero
+.IR para (15) 
+on the first call to \fInplot\fR will cause the grid, axes, and labels
+to be drawn thick as well, and that character drawing is also affected by
+.IR para (15).
+.TP
+.B 16:
+Selects equal angle mode, and controls drawing of box around
+diagram.  If \fIpara\fR(16) is [strictly] negative (\fIe.g., \fR -0.5), 
+the box around the plot is \fBnot\fR drawn.
+.RI (  \ If\  para (16)
+equals 1.0 or -1., then
+units on both axes are set equal.)  
+.TP
+.B 17:
+If equal to 1.0, x-axis grid is omitted.  Note that if \fIpara\fR(16)
+was set negative (see above), the grid is omitted automatically, regardless of
+the value of \fIpara\fR(17). 
+.TP
+.B 18:
+If equal to 1.0, y-axis grid is omitted.  Note that if \fIpara\fR(16)
+was set negative (see above), the grid is omitted automatically, regardless of
+the value of \fIpara\fR(18). 
+.TP
+.B 19:
+The interpretation of this parameter differs depending on the call.
+For point or line plots (see
+.IR para "(13) and " para (14)),
+use of this parameter allows plots to be 
+made without creating a full array for one coordinate if it is 
+uniformly spaced, thus saving storage in the calling program.
+If
+.IR para (19)
+equals 1.0, points are uniformly spaced in \fIx\fP with starting point
+.IR x (1)
+and increment
+.IR x (2);\  x
+may be dimensioned as
+.IR x (2)
+in the calling program.  Setting the parameter equal to -1.0 does the same for
+.IR y .
+.IP
+During calls to \fInlabel\fP or \fIplabel\fP, this parameter gives the angular
+orientation of the text, in degrees counterclockwise from the X-axis.  In
+conjunction with
+.IR para (11),
+the size and orientation of the text strings is defined.
+.TP
+.B 20:
+Should equal 0.0 on the first call to 
+.I nplot
+and should not be re-zeroed on later calls as it
+indicates that the plotfile is open
+.RI ( I.e., \ zeroing \ para (20)
+causes all previous plots to be destroyed.)
+To change the name of the plotfile from the default
+.I pltfil
+to some other name, make an initial call to
+.I nplot
+with
+.IR para (20)
+set to a negative number and
+.I title
+set to the new plotfile name.
+.I Nplot
+will generate a diagnostic message stating that the plotfile name has
+been changed to the value of
+.IR title ;
+it will then re-zero
+.IR para (20)
+and return normally, ready for the usual initial calling sequence.
+.TP
+.B 21:
+Only applicable in
+.B "extended mode,"
+as discussed above under
+.IR para (14).
+Dashed lines are plotted in extended mode, rather than continuous lines.
+.IR Para (21)
+contains the length of the dashes.    \fIDefault Value:\fR  1.0; this produces 
+dashes approximately 2 mm long.
+.TP
+.B 22:
+Only applicable in
+.B "extended mode,"
+as discussed above under
+.IR para (14).
+Dashed lines are plotted in extended mode, rather than continuous lines.
+.IR Para (22)
+contains the spacing between the dashes.    \fIDefault Value:\fR  0.75; this
+produces spaces approximately 1 mm long.
+Numerous flavors of dotted or dashed lines may be produced with
+various combinations of
+.IR para (21)
+and
+.IR para (22).
+\fBDot-dashed lines \fR(alternating long dashes and short dashes or dots) may
+be obtained by overlaying two different flavors of uniformly dashed lines,
+for example \fBfirst\fR \fIpara\fR(21) = 0.5, \fIpara\fR(22) = 1.; \fBthen
+\fIpara\fR(21) = 1.5, \fIpara\fR(22) = 3.
+.sp
+.PP
+In addition to \fInplot\fR itself, there are two lower-level graphics
+subroutines available.
+.I Nmove
+moves the current pen position to the point
+.RI ( x , y )
+in global coordinates (the coordinate system used in specifying 
+.I x
+and
+.I y
+in an
+.I nplot
+call.)  The subroutine
+.I nline
+draws a line from the current pen position to the point
+.RI ( x , y ).
+.PP
+.I nfont
+converts a font name to an internal code to be placed into \fIpara\fP(11)
+(see above).  \fInfont\fP's argument is a one- or two-letter character
+string giving the font name, \fIe.g.\fP "R", "BI", etc.  A complete list of
+fonts and font names is given in the
+.IB plotfil (5)
+writeup.
+.PP
+.I Nshad
+is used to outline or fill polygons on plots previously opened by \fInplot\fP.
+A polygon with vertices at the \fIn\fR points
+.RI ( x , y )
+is drawn.  If \fImask\fR is zero, the polygon will be outlined.  A \fImask\fR
+of 1 will shade the polygon with solid black, and higher mask values (up to
+10 or so) will cause it to be filled with lighter shades of grey.  Note that
+\fItek\fR(1) doesn't know how to shade polygons; it outlines them instead.
+.PP
+.I Npat
+is similar to \fInshad\fR, but fills polygons with predefined patterns.
+A \fIpattern\fR of 0 is solid black, 1 is solid white, and the remaining
+patterns (up to 8) are various diagonal stripes and shades of
+grey, which are currently unsupported.
+As with \fInshad\fR, \fItek\fR will outline polygons instead of filling
+them.
+.PP
+\fINcolor\fR and \fInrgb\fR can be used to change the color of the
+drawings produced by subsequent plotting commands.  Both functions
+affect \fBeverything\fR which is plotted afterwards, including lines,
+text, polygons, and shaded areas.  Color plotting can currently be done
+only with the
+.IR sunplot (1)
+command; other plotting programs replace the colors with various shades of
+gray.
+.PP
+\fINcolor\fR sets the color to a
+predetermined color specified by \fIicol\fR, which must be in the range
+0 - 22.  \fINrgb\fR allows the color to be specified by the intensities
+of its red, green, and blue components.  \fIIred\fR, \fIigreen\fR, and
+\fIiblue\fR must be between 0 and 255.  The colors 23 available in
+\fIncolor\fR, along with a their red, green, and blue components, are:
+.nf
+.in +0.5i
+.ta .5i 2.0i 2.8i 3.6i 4.4i
+\fBNo.	Color	Red	Green	Blue\fR
+0	Black	0	0	0
+1	White	255	255	255
+2	Red	255	0	0
+3	Pink	255	150	150
+4	Orange	255	128	0
+5	Yellow	255	255	0
+6	Dark Green	0	130	0
+7	Light Green	0	180	0
+8	Bright Green	0	255	0
+9	Bluish Green	0	220	180
+10	Blue/Green	0	200	200
+11	Greenish Blue	0	180	220
+12	Navy Blue	0	0	170
+13	Bright Blue	0	0	255
+14	Light Blue	150	150	255
+15	Purple	160	0	240
+16	Violet	200	0	200
+17	Magenta	240	0	160
+18	Light "Brown"	255	200	139
+19	Dark Brown	128	100	40
+20	Light Gray	190	190	190
+21	Medium Gray	150	150	150
+22	Dark Gray	110	110	110
+.in
+.fi
+.PP
+.I Nlabel
+and
+.I plabel
+add additional label strings to a plot.  The label
+.I s
+is placed with its' bottom left at the point 
+.RI ( xp , yp ).
+.I Nlabel
+expresses this location in a coordinate system relative to the page of text,
+in inches relative to the lower left corner of the box produced by
+.IR nplot .
+.IR Plabel ,
+on the other hand, expresses this location in the
+coordinate system of the data in the plot.  The size of the characters and
+their font is under control of
+.IR para (11).
+The string's angular orientation is given by
+.IR para (19).
+.PP
+.I Const
+appends a blank space followed by the character string
+.I t
+after the last non-space character of the character string
+.IR s .
+.PP
+.I Conum
+convert decimal numbers to character strings.  It appends the number
+.I x
+(to
+.I p
+decimal places)
+to the character string
+.IR s .
+.PP
+.I Conzro
+re-initializes to zero the contents of the character string
+.I s
+of dimension
+.IR m .
+.PP
+.I Nadjus
+returns the length
+.I l
+of the character string
+.IR s ,
+disregarding trailing nulls and spaces.
+.PP
+.I Nform
+converts the floating point number
+.I x
+to a character string
+.IR s ,
+including
+.I p
+digits to the right of the decimal point.
+The length,
+.IR l ,
+of the string
+.I s
+is returned.
+.SH DIAGNOSTICS
+.I Nplot
+generates beneficent messages in one case only:  upon changing the name
+of the plotfile from the default ``pltfil'' (see
+.IR para (20)).
+Diagnostic messages are enabled by setting the shell environment variable
+``\fBnplot_debug\fR'' to some value.
+Otherwise
+.I nplot
+only speaks when bad things happen....
+.SH EXAMPLE
+For example, to produce a character string
+.I s
+of the form:
+.br
+	``x = 3.1''
+.br
+in an f77 program, use the following instructions:
+.IP
+character s(20)
+.br
+\ \ \ \ \ .\ .\ .
+.br
+call conzro(s,20)
+.br
+call const(s,'x =')
+.br
+m=1
+.br
+x=3.14159
+.br
+call conum(s,x,m)
+.SH "SEE ALSO"
+.nf
+apen(1), ipen(1)
+plotdb(1), iplotdb(1)
+stek(1)
+sunplot(1)
+troff(1)
+vtek(1)
+plotfil(5)
+ascii(7)
+printenv(1), environ(7)
+.fi
+.SH AUTHORS
+H. K., November 1981
+.br
+Seth Stein, 1982, 1984, 1985
+.br
+Craig Bina, 1983, 1985, 1986
+.br
+John Werner, 1985, 1986
+.br
+Emile Okal, 1985, 1987
+.br
+George Helffrich, 1987, 1988
+.SH "DOCUMENTATION AUTHORS"
+Seth Stein, 1982
+.br
+Craig Bina, 1982, 1983, 1985, 1986
+.br
+John Werner, 1985, 1986
+.br
+George Helffrich, 1987, 1988
+.br
+Emile Okal, 1987
+.SH BUGS
+These routines in the
+.I nplot
+library cannot manipulate character strings which are more than
+eighty (80) characters in length.
+.LP
+Alternate plotfile names, as declared through
+.IR title \ and \ para (20),
+cannot exceed twenty (20) characters.
+.LP
+Some of the auxiliary subroutines require that
+.I nplot
+be called to initialize the plot file before they can be successfully called.
+This should be fixed; they should do the initialization themselves if it has
+not been done already.
+.LP
+As this library represents an ongoing (albeit sporadic) development
+effort by multiple authors in multiple languages, prolonged exposure
+to the source code may prove hazardous to one's health.

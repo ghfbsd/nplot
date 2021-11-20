@@ -1,0 +1,43 @@
+Modification history:
+11/81:  New version for FORTRAN.    Hitoshi Kawakatsu 11/20/81
+6/82:	Minor changes subroutine renamed nplot.c
+	and set up for nu pdp11/44, Seth Stein
+
+1983:	Subroutine axmi() modified for constant functions, Craig Bina
+
+6/84:	Minor modifications to para(19) storage option, Seth Stein
+
+1985:	Modified for variable plotfile names, Craig Bina
+
+6/85:	VAX VERSION - All integers changed to short (ie 2 bytes) 
+	This is crucial for those written out to "pltfil" 
+	as pen,tek expect this (2 bytes in "write" commands, which use
+	the "geth" command).
+	This also eliminates discrepancies between variables defined 
+	in some places as short and others as int, which are no longer
+	equivalent.  Minor bug related to string length in labels fixed.
+	Some stylistic changes also made
+	in response to VAX C compiler warnings. Seth Stein
+
+8/85:	Subroutines nline and nmove added.  Line thickness option added.
+	John Werner
+
+11/85:	Modified to plot polygons, Craig Bina
+
+1/86:	Modified for smaller default plot area (due to Imagen), S. Stein.
+
+2/86:	Modified to fix auto-scaling of origin placement
+	(nlabel.c incidentally combined into nplot.c); C. Bina
+	modified to fix rounding errors in nform(); C. Bina
+	modified to attempt fix of polygon initialization calls; C. Bina
+
+2/86:	Modified to allow dashed lines, extending para() via para(14), C. Bina
+ 
+8/88:   Add plus and cross symbols.
+        G. Helffrich 8/15/88.
+ 
+6/99:   Add code to use Fortran character string length.
+        G. Helffrich 6/3/99.
+
+10/10:  Build 32 or 64 bit versions.
+        G. Helffrich 10/2/10

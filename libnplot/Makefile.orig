@@ -1,0 +1,66 @@
+# Makefile for nplot stuff
+#
+#	make		Compiles source code
+#	lib		Makes object library
+#	install		Puts object code in library, compiling source
+#			if necessary
+#	clean		removes object files
+
+# Use code optimizers
+FC = gfortran
+FFLAGS = -O -m32
+CFLAGS = -O
+CFLAGS = -g -m32
+
+OBJS=	nplot.o const.o geth.o getw.o nshad.o npat.o ncolor.o puth.o putw.o font.o
+LIB=	libnplot-32.a
+DEST=	/usr/local/lib
+MAN=	/usr/local/man/man3
+OWNER=	george
+GROUP=	staff
+
+FONTFILE=	${LIB}/nplotfont
+
+lib ${LIB}: ${OBJS}
+	ar rv ${LIB} ${OBJS}
+	ranlib ${LIB}
+
+install-lib: ${LIB}
+	install -m 775 -o ${OWNER} -g ${GROUP} ${LIB} ${DEST}
+	ranlib ${DEST}/${LIB}
+
+fonts:
+	(cd fontstuff; \
+	 make ${MFLAGS} all FONTFILE=${FONTFILE} )
+
+install-fonts:
+	(cd fontstuff; \
+	 make ${MFLAGS} install \
+	    FONTFILE=${FONTFILE} GROUP=${GROUP} OWNER=${OWNER} )
+
+objs: ${OBJS}
+
+font.o: font.c font.h
+	cc ${CFLAGS} -c font.c -DFONTFILE_PREFIX='"${FONTFILE}"'
+
+nplot.o: nplot.h nplot.c
+	cc ${CFLAGS} -c nplot.c
+
+install: install-lib install-fonts install-man
+
+man install-man:
+	-[ ! -d ${MAN} ] && mkdir ${MAN}
+	install -c -m 664 -o ${OWNER} -g ${GROUP} nplot.3x ${MAN}/nplot.3
+
+debug: nplot.c const.f
+	cc  -c -g nplot.c
+	$(FC) -c -g const.f
+	ar rv debuglib.a nplot.o const.o
+	ranlib debuglib.a
+
+clean:
+	rm -f *.o
+	rm -f ${LIB} debuglib.a
+	rm -f pltfil a.out core
+	rm -f nplot.l
+	(cd fontstuff; make ${MFLAGS} clean)
