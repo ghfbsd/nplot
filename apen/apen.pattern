@@ -1,0 +1,119 @@
+%Program apen.pattern
+%!PS-Adobe-1.0
+% PostScript code to fill an area with a 16 x 16 pattern
+% Taken from "PostScript language Tutorial and Cookbook", p191.
+/setuserscreendict 39 dict def
+setuserscreendict begin
+ /tempctm matrix def
+ /temprot matrix def
+ /tempscale matrix def
+
+ /concatprocs {
+  /proc2 exch cvlit def
+  /proc1 exch cvlit def
+  /newproc proc1 length proc2 length add array def
+  newproc 0 proc1 putinterval
+  newproc proc1 length proc2 putinterval
+  newproc cvx
+ } def
+
+ /resmatrix matrix def
+ /findresolution {
+  300 0 resmatrix defaultmatrix dtransform
+  /yres exch def /xres exch def
+  xres dup mul yres dup mul add sqrt
+ } def
+end
+
+/setuserscreen {
+ setuserscreendict begin
+  /spotfunction exch def
+  /screenangle exch def
+  /cellsize exch def
+
+  /m tempctm currentmatrix def
+  /rm screenangle temprot rotate def
+  /sm cellsize dup tempscale scale def
+  sm rm m m concatmatrix m concatmatrix pop
+  1 0 m dtransform /y1 exch def /x1 exch def
+  /veclength x1 dup mul y1 dup mul add sqrt def
+  /frequency findresolution veclength div def
+  /newscreenangle x1 y1 atan def
+
+  m 2 get m 1 get mul m 0 get m 3 get mul sub 0 gt
+  { { neg } /spotfunction load concatprocs
+    /spotfunction exch def
+  } if
+
+  frequency newscreenangle /spotfunction load
+    setscreen
+ end
+} def
+
+/setpatterndict 118 dict def
+setpatterndict begin
+ /bitison {
+  /ybit exch def /xbit exch def
+  /bytevalue bstring ybit bwidth mul xbit 8 idiv add get def
+  /mask 1 7 xbit 8 mod sub bitshift def bytevalue mask and 0 ne
+ } def
+end
+
+/bitpatternspotfunction {
+ setpatterndict begin
+  /y exch def /x exch def
+  /xindex x 1 add 2 div bpside mul cvi def
+  /yindex y 1 add 2 div bpside mul cvi def
+  xindex yindex bitison
+   { /onbits  onbits  1 add def 1 }
+   { /offbits offbits 1 add def 0 }
+   ifelse
+ end
+} def
+
+/setpattern {
+ setpatterndict begin
+  /cellsz exch def
+  /angle  exch def
+  /bwidth exch def
+  /bpside exch def
+  /bstring exch def
+
+  /onbits 0 def /offbits 0 def
+  cellsz angle /bitpatternspotfunction
+    load setuserscreen
+  { } settransfer
+  offbits offbits onbits add div setgray
+ end
+} def
+
+/pat1  <C000C00003000300000C000C0C000C000003000300C000C03000300000300030> def
+/pat2  <CF03CF030F000F00000F000F03CF03CFF3C0F3C0F000F00000F000F0C0F3C003> def
+/pat3  <4000200010000800040002000100008000400020001000080004000200018000> def
+/pat4  <0001000200040008001000200040008001000200040008001000200040008000> def
+/pat5  <4001200210040808041002200140008001400220041008081004200240018000> def
+/pat6  <8000800080008000800080008000800080008000800080008000800080008000> def
+/pat7  <000000000000000000000000000000000000000000000000000000000000FFFF> def
+/pat8  <800080008000800080008000800080008000800080008000800080008000FFFF> def
+/pat9  <8080808080808080808080808080808080FF808080808080808080808080FF80> def
+/pat10 <7F9F9F73C061C0E1C0FFC0FFC0FFC07F9F7F739F61C0E3C0FFC0FFC0FFC07FC0> def
+/pat11 <FF807FC03FA01F100E080404080E101FA03FC07F80BF011F020E04040E021F01> def
+/pat12 <C007C00CC01840306060304018C00CC007C00CC018C0304060604030C018C00C> def
+/pat13 <CFFFCFFF00000000CFFFCFFFCFFFCFFFCF00CF00CF00CF00CF00CF00CF00CF00> def
+/pat14 <0100020004000FC015782AAE5555FFFF00010002000400080010002000400080> def
+/pat15 <78003C001E000F00078003C001E000F00078003C001E000F8007C003E001F000> def
+/pat16 <000F001E003C007800F001E003C007800F001E003C007800F000E001C0038007> def
+/pat17 <780F3C1E1E3C0F7807F003E003E007F00F781E3C3C1E780FF007E003E003F007> def
+/pat18 <7F803FC01FE00FF007F803FC01FE00FF807FC03FE01FF00FF807FC03FE01FF00> def
+/pat19 <00FF01FE03FC07F80FF01FE03FC07F80FF00FE01FC03F807F00FE01FC03F807F> def
+/pat20 <7FFF3FFE1FFC0FF80FF81FFC3FFE7FFFFF7FFE3FFC1FF80FF80FFC1FFE3FFF7F> def
+/pat21 <4040202010100808040402020101808040402020101008080404020201018080> def
+/pat22 <0101020204040808101020204040808001010202040408081010202040408080> def
+/pat23 <8080808080808080808080808080808080808080808080808080808080808080> def
+/pat24 <0000000000000000000000000000FFFF0000000000000000000000000000FFFF> def
+/pat25 <4010401044104410440044000402040204020402004210421040104000404000> def
+/pat26 <2001100208040400080010082010002000100108020004000800040002040102> def
+/pat27 <02000408080410022001000000400030040C0800104080204004200810100800> def
+/pat28 <8001400220041008081004200240018080014002200410080810042002400180> def
+/pat29 <8080404020201010080804040202010180800101020204040808101020204040> def
+/pat30 <8080020208081010202040408080808080804040202010100808020280800000> def

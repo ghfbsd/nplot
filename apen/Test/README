@@ -1,0 +1,6 @@
+Test programs for some ipen components.
+
+To test `pic', say
+   itroff -si -me pictest.me | pic pic.plot | lpr -Pimagen
+or
+   itroff -si -ms pictest.ms | pic pic.plot | lpr -Pimagen

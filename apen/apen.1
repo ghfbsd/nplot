@@ -1,0 +1,156 @@
+.TH APEN L "November 24, 1986" "NU Geology"
+.\" Define the string Pn to be the device name of the Apple laser printer
+.\"    at your site.
+.ds Pn apple
+.SH NAME
+apen \- vector graphics filter for Apple LaserWriter
+.SH SYNOPSIS
+.B apen
+[ flags ] [
+.I file ...
+]
+.SH DESCRIPTION
+.I Apen
+takes files of the format
+.IR plotfil (5)
+as input and produces plots on an Apple LaserWriter, or any other PostScript
+printer, using the full resolution of the printer.
+If no \fIfile\fR is specified, \fIapen\fR reads the standard input.
+.PP
+The following switches are recognized:
+.TP
+.B \-e
+Produce an EPS file on the standard output.
+Implies \fB-vb\fR and \fB-F\fR.
+.TP
+.B \-v
+Produce a plot with the long axis of the paper oriented vertically.  Normally
+plots are made with the \fIx\fR-axis along the long side of the paper.  The
+base line of the plot is moved down by the width of the paper (approx.\ 8.5").
+.TP
+.B \-vb
+Same as \fB-v\fR, but the base line of the plot is moved to the bottom of the
+page of paper (approx.\ 11").  This makes available the bottom 3" or
+so of the sheet for plotting.
+.TP
+.B \-h
+Produce a plot with the long axis of the paper oriented horizontally.
+This is the default behavior.
+.TP
+.B \-r
+Rotate the orientation to the alternate (vertical if horizontal and vice-versa).
+Sometimes this is useful along with \fB-e\fP to get the proper figure
+orientation.
+.TP
+\fB\-c\fP n, \fB\-#\fP n
+Plot
+.I n
+copies.
+.TP
+.BI \-f \&fatbase
+Set line thickness factor equal to
+.IR fatbase ;
+the greater the value of
+.IR fatbase ,
+the thicker the lines will be.
+This works best when
+.I fatbase
+is an even number.
+.I Fatbase
+must be an integer.
+.TP
+.IB scale x
+Set the x-direction scale factor equal to
+.IR scale .
+.I Scale
+may be preceded by an optional
+`\-'
+which is ignored.
+.TP
+.IB scale X
+Same as
+.IB scale x
+option.
+.TP
+.IB scale y
+Set y-direction scale factor equal to
+.IR scale .
+.I Scale
+may be preceded by an optional
+`\-'
+which is ignored.
+.TP
+.IB scale Y
+Same as
+.IB scale y
+option.
+.TP
+.I scale
+Set both x-direction and y-direction scale factors equal to
+.IR scale .
+.I Scale
+may be preceded by an optional
+`\-'
+which is ignored.
+.TP
+.BI \-L\0 dir
+Set the directory where
+.IR apen 's
+data files are located to
+.I dir.
+This is usually used for testing purposes.
+.TP
+.BI \-F
+Suppress the plot's footer (giving the user name, current directory, file
+name and date of printing).
+.TP
+.BI \-P\0 printer
+The output of this program is intended for 
+.I printer.
+This determines the printer to which the plot is spooled.
+If left unspecified, the printer name is taken from the environment variable 
+PLOTTER, (if defined), then from PRINTER (if defined), and otherwise defaults 
+to \*(Pn.
+.TP
+.B -t
+Send
+.IR apen 's
+PostScript output to the standard output, instead of spooling it.
+.PP
+Note that
+.I scale
+may be specified as either a floating point value or an integer.
+Scale factors operate as multipliers to the original
+coordinates of points.
+If no scale factors are specified, the file will be plotted with the
+correct size.
+.SH ENVIRONMENT VARIABLES
+.TP
+PLOTTER
+If defined, this is taken to be the name of the printer to which the
+plot output is spooled.  -P (see above) overrides this.
+.TP
+PRINTER
+If defined, this is taken to be the name of the printer to which the
+plot output is spooled.  -P and PLOTTER (see above) override this.
+.TP
+LOGNAME
+The user name put on the plot footer and the identification in the file
+is taken from this environment variable value.
+.SH SEE ALSO
+plotdb(1), nplot(3), plotfil(5)
+.SH AUTHOR
+.nf
+John Werner, 1988
+George Helffrich, 1988, 1990, 2002, 2010
+.fi
+.SH DIAGNOSTICS
+.LP
+.I Apen
+complains about missing files and invalid plot commands.
+.LP
+Invalid characters are drawn as a square blot in the output.
+.SH BUGS
+Raster data currently cannot be plotted, and is replaced by an outline of the
+area to be rasterized.  The format for command-line options is messy, but
+is compatible with \fItek\fR and \fIipen\fR.

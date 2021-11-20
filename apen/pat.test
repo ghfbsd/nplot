@@ -1,0 +1,139 @@
+%!PS-Adobe-1.0
+% PostScript code to fill an area with a 16 x 16 pattern
+% Taken from "PostScript language Tutorial and Cookbook", p191.
+/setuserscreendict 22 dict def
+setuserscreendict begin
+ /tempctm matrix def		% Temporary matrices
+ /temprot matrix def
+ /tempscale matrix def
+
+ /concatprocs {			%Concatenate two procedure bodies into one
+  /proc2 exch cvlit def
+  /proc1 exch cvlit def
+  /newproc proc1 length proc2 length add array def
+  newproc 0 proc1 putinterval
+  newproc proc1 length proc2 putinterval
+  newproc cvx
+ } def    % end of /concatprocs
+
+ /resmatrix matrix def		%Temporary matrix used below
+ /findresolution {		%Find resolution of screen in dpi.
+  72 0 resmatrix defaultmatrix dtransform	% we use 300 units per in.
+  /yres exch def /xres exch def
+  xres dup mul yres dup mul add sqrt
+ } def
+end	% of setuserscreendict
+
+/setuserscreen {	% 3 arguments: cell size; angle; spot function
+ setuserscreendict begin
+  /spotfunction exch def
+  /screenangle exch def
+  /cellsize exch def
+
+  /m tempctm currentmatrix def			% current matrix
+  /rm screenangle temprot rotate def		% rotation matrix
+  /sm cellsize dup tempscale scale def		% scale matrix
+  sm rm m m concatmatrix m concatmatrix pop	% m = sm*rm*m
+  1 0 m dtransform /y1 exch def /x1 exch def    % find unit vec in dev space
+  /veclength x1 dup mul y1 dup mul add sqrt def	% len of unit vec in dev space
+  /frequency findresolution veclength div def	% frequency of pattern (1/in)
+  /newscreenangle x1 y1 atan def
+
+  m 2 get m 1 get mul m 0 get m 3 get mul sub 0 gt
+  { { neg } /spotfunction load concatprocs	% Fix mirrored coord systems
+    /spotfunction exch def
+  } if
+
+  frequency newscreenangle /spotfunction load	% set up halftone screen
+    setscreen
+
+ end
+} def	% end of /setuserscreen
+
+/setpatterndict 18 dict def			%local storage for "setpattern"
+setpatterndict begin
+ /bitison {					% see if bit x,y is on
+  /ybit exch def /xbit exch def
+  /bytevalue bstring ybit bwidth mul		% Get byte to be tested
+    xbit 8 idiv add get def
+  /mask 1 7 xbit 8 mod sub bitshift def		% Create mask
+  bytevalue mask and 0 ne
+ } def
+end % of setpatterndict
+
+/bitpatternspotfunction {			% decide which bits are on
+ setpatterndict begin
+  /y exch def /x exch def			% args: x and y
+  /xindex x 1 add 2 div bpside mul cvi def	% get position in bit pattern
+  /yindex y 1 add 2 div bpside mul cvi def
+  xindex yindex bitison				% see if bit is on in pattern
+   { /onbits  onbits  1 add def 1 }
+   { /offbits offbits 1 add def 0 }
+   ifelse
+ end	% of setpatterndict
+} def	% end of /bitpatternspotfunction
+
+/setpattern {			% actually does the work. takes 5 arguments
+ setpatterndict begin
+  /cellsz exch def		% halftone screen cell size
+  /angle  exch def		% screen angle
+  /bwidth exch def		% width of pattern in bytes
+  /bpside exch def		% bits per side of pattern
+  /bstring exch def		% pattern as hex string
+
+  /onbits 0 def /offbits 0 def
+  cellsz angle /bitpatternspotfunction	% set up halftone screen
+    load setuserscreen
+  { } settransfer				% don't allow gray correction
+  offbits offbits onbits add div setgray	% grey value is ratio off/total
+ end	% of setpatterndict
+} def	% end of /setpattern
+
+% Test functions
+/inch {72 mul} def
+
+/showpattern {
+ /ang exch def
+ /pat exch def
+
+ pat 16 2 ang 72 300 32 div div setpattern
+ newpath
+  0 0 moveto 3 inch 0 lineto
+  3 inch dup lineto 0 3 inch lineto
+ closepath fill
+} def
+
+/pat1  <C000C00003000300000C000C0C000C000003000300C000C03000300000300030> def
+/pat2  <CF03CF030F000F00000F000F03CF03CFF3C0F3C0F000F00000F000F0C0F3C003> def
+/pat3  <4000200010000800040002000100008000400020001000080004000200018000> def
+/pat4  <0001000200040008001000200040008001000200040008001000200040008000> def
+/pat5  <4001200210040808041002200140008001400220041008081004200240018000> def
+/pat6  <000000000000000000000000000000000000000000000000000000000000FFFF> def
+/pat7  <8000800080008000800080008000800080008000800080008000800080008000> def
+/pat8  <800080008000800080008000800080008000800080008000800080008000FFFF> def
+/pat9  <FFFF8000800080008000800080008000FFFF0080008000800080008000800080> def
+/pat10 <7F9F9F73C061C0E1C0FFC0FFC0FFC07F9F7F739F61C0E3C0FFC0FFC0FFC07FC0> def
+/pat11 <FF807FC03FA01F100E080404080E101FA03FC07F80BF011F020E04040E021F01> def
+/pat12 <FF807FC03FA01F100E080404080E101FA03FC07F80BF011F020E04040E021F01> def
+/pat13 <CFFFCFFF00000000CFFFCFFFCFFFCFFFCF00CF00CF00CF00CF00CF00CF00CF00> def
+/pat14 <0100020004000FC015782AAE5555FFFF00010002000400080010002000400080> def
+/pat15 <78003C001E000F00078003C001E000F00078003C001E000F8007C003E001F000> def
+/pat16 <000F001E003C007800F001E003C007800F001E003C007800F000E001C0038007> def
+/pat17 <780F3C1E1E3C0F7807F003E003E007F00F781E3C3C1E780FF007E003E003F007> def
+/pat18 <7F803FC01FE00FF007F803FC01FE00FF807FC03FE01FF00FF807FC03FE01FF00> def
+/pat19 <00FF01FE03FC07F80FF01FE03FC07F80FF00FE01FC03F807F00FE01FC03F807F> def
+/pat20 <7FFF3FFE1FFC0FF80FF81FFC3FFE7FFFFF7FFE3FFC1FF80FF80FFC1FFE3FFF7F> def
+
+/Helvetica findfont 12 scalefont setfont
+
+gsave
+ 1 inch 1.25 inch translate
+ pat1 0 showpattern
+grestore
+
+
+gsave
+ 4.5 inch 1.25 inch translate
+ pat2 90 showpattern
+grestore
+showpage

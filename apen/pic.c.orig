@@ -1,0 +1,165 @@
+/*  Pic -- Program to take Postscript output and search it 
+	   for picture designations, then splice the picture into the text 
+	   of the page.  
+	   
+	   George Helffrich, May. 1990  */
+
+/* PROGRAM should be defined via cc ... -DPROGRAM= to be the
+      appropriate file name.  */
+
+#include <stdio.h>
+#include <sys/wait.h>
+#include <strings.h>
+#include "pic.h"
+
+char *progname;
+
+main(argc,argv)
+    int argc; 
+    char **argv;
+{
+    register char *cptr;
+    register int c;
+    int count = 0;
+    int bufcount = 0;
+    FILE *flist = NULL;
+    char filename[FILE_NAME_LENGTH];
+    char buf[BUFLEN];
+    char pspat1[64], pspat2[64], fnpat[64];
+    float scale;
+
+    /*  Arguments are the list of plot file names to be associated with
+	each picture.  They are used one-for-one as pictures are found
+	in the input.  
+	
+	Arguments may also be -f file-name which designates a file in which
+	to find the names of the plot files to include in the document.  */
+    progname = *argv;
+    if (--argc) {
+       cptr = *++argv; scale = 1.0;
+       if (!strcmp(cptr,"-f")) {  /* Appears to be a file name */
+	  if ((!--argc) || ((flist = fopen(*++argv,"r")) == NULL))
+	     error("unable to open file with plot file names");
+	  if (--argc)
+	     error("too many parameters");
+	  cptr = filename; 
+	  (void) sprintf(fnpat, "%%%ds %%f",FILE_NAME_LENGTH-1);
+	  if (fscanf(flist, fnpat, cptr, &scale) < 1)
+	     cptr = "/dev/null";
+       }
+    } else
+       cptr = "/dev/null";
+
+    /*  Pattern match on first characters of input to determine type
+	of output to produce.  */
+    (void) fgets(buf,BUFLEN,stdin); if (0 != strncmp(buf,"%!",2)) 
+       error("File not Postscript output, quitting");
+    (void) fputs(buf,stdout);
+
+    /*  Read input looking for our string indicating a picture.  Build
+	scan pattern.  */
+    (void) sprintf(pspat1, "%%%d[^(](\\242)%%%d[^\n]",BUFLEN-1,BUFLEN-1);
+    (void) sprintf(pspat2, "%%%d[^<]<a2>%%%d[^\n]",BUFLEN-1,BUFLEN-1);
+    while(NULL != fgets(buf,sizeof(buf),stdin)) {
+       char tail[BUFLEN], head[BUFLEN];
+
+rescan:
+       if ((2 == sscanf(buf,pspat1,head,tail)) ||
+	   (2 == sscanf(buf,pspat2,head,tail))) {
+	  /* Have a picture -- take name from argv value */
+	  (void) fprintf(stdout,"%s\n",head);
+	  (void) sprintf(head,"(\\ )%s\n",tail);
+	  getInit(head, stdin); while (oCmd != getObj())
+	     /* repeatedly eat up input until an operator found */;
+	  { int n;
+	    char *p = getBuf(&n);
+	    (void) strncpy(head,p,n); head[n]='\0'; (void) strcpy(tail,p+n);
+	    (void) fprintf(stdout,"%s\n",head);
+	  }
+	  insert_plot(cptr, scale);
+	  count = 0; bufcount = 0;
+	  if (flist != NULL) {
+	     scale = 1.0; if (fscanf(flist, fnpat, cptr, &scale) < 1)
+		cptr = "/dev/null";
+	  } else {
+	     if (--argc)
+		cptr = *++argv;
+	     else
+		cptr = "/dev/null";
+	  }
+	  if (!(*tail == '\n' && strlen(tail)==1)) {
+	     (void) strcpy(buf," "); (void) strcat(buf,tail);
+	     goto rescan;
+	  }
+       } else {
+	  /*  Dump this output line. */
+	  (void) fputs(buf, stdout);
+	  *buf = '\0';
+       }
+    }
+	       
+    (void) fflush(stdout);
+    exit(0);
+}
+
+
+insert_plot(s, scale)
+   char *s;
+   float scale;
+{
+   /* Fork ourselves and call PROGRAM to plot the file passed
+      as the argument name. */
+   int pid;
+   union wait result;
+   int i, c;
+   char argscale[64];
+   char buf[BUFLEN];
+   char *eof;
+   FILE *file;
+
+   /* Flush any text out of the pipe, so stuff doesn't
+      get interleaved with the text we've copied so far. */
+   (void) fflush(stdout);
+
+   /* Open file and examine first characters to see whether it is
+      a plot file or a PostScript file */
+   if (NULL == (file = fopen(s,"r"))) goto badfile;
+
+   eof = fgets(buf,BUFLEN,file); 
+   if ((eof != NULL) && (0 == strncmp(buf,"%!",2))) {
+      /* File is PostScript, copy it to standard output as-is */
+      puts("gsave"); 
+      puts("/cmat matrix currentmatrix def"); /* Get CTM */
+      puts("currentpoint translate"); /* Move origin before scaling */
+      puts("matrix defaultmatrix 0 get"); /* Get scale from default matrix */
+      puts("cmat 0 get div"); /* get x scale from CTM, calc rescale factor */
+      puts("matrix defaultmatrix 3 get"); /* get x scale out of default CTM */
+      puts("cmat 3 get div"); /* get x scale from CTM, calc rescale factor */
+      puts("scale"); /* set up new scale. */
+      for (; NULL != eof; eof = fgets(buf, BUFLEN, file))
+	 (void) fputs(buf, stdout);
+      (void) puts("grestore"); (void) fclose(file);
+
+   } else {
+      /* File is plot file.  Fork ourselves and exec the program 
+	 to convert the plot file to PostScript. */
+      (void) fclose(file);
+      (void) sprintf(argscale,"-%f",scale);
+      if ((pid = fork()) == 0)
+	 execl(PROGRAM, PROGRAM, "-e", argscale, s, 0);
+      pid = wait(&result);
+      if (WIFEXITED(result) && (result.w_retcode != 0)) {
+badfile:
+	 fprintf(stderr,"%s: error drawing figure in %s\n",progname,s);
+      }
+   }
+   (void) fflush(stdout);
+}
+
+error(s)
+   char *s;
+/* Print error message string and terminate */
+{
+   fprintf(stderr,"%s: %s.\n",progname,s);
+   exit(1);
+}

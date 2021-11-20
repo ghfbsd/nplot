@@ -1,0 +1,10 @@
+#! /bin/csh
+set files=" stip1 stip2 diag1 diag2 diag3 line1 line2 line3 brick thing1 thing2 thing3 thing4 thing5 diag4 diag5 diag6 diag7 diag8 diag9 "
+
+cp /dev/null pats.c
+
+foreach i($files)
+	makepat < $i.b >! $i.h
+	cat $i.h >> pats.c
+end
+

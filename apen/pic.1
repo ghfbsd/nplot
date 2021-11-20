@@ -1,0 +1,122 @@
+.TH NPIC L "May. 15, 1990" "Bristol Geology"
+.\" Define the string Pn to be the device name of the printer
+.\"    at your site.
+.ds Pn lw
+.\" Define the string Tn to be the device name of troff
+.\"    at your site.
+.ds Tn ptroff
+.SH NAME
+npic \- include plot files in documents prepared with troff
+.SH SYNOPSIS
+.B npic
+[ -f 
+.I file
+]
+.LP
+.B npic
+[
+.I file ...
+]
+.SH DESCRIPTION
+.I npic
+is a filter through which the output of
+.IR \*(Tn (1)
+is piped to include plot files in troff documents.  The plot file may be
+in either the
+.IR plotfil (5)
+format, as is produced by the nplot subroutine, for example,
+or may be a PostScript document.
+.IR npic 's
+output should be piped to
+.IR lpr (1)
+and printed on a PostScript printer with the command,
+.ce 1
+\&... | \*(Tn -t ... | npic ... | lpr -P\*(Pn
+.I Note
+usage of the -t option with \*(Tn.  If you do not include this, \*(Tn will
+send the document directly to the laser printer without giving
+.I npic
+the opportunity to include the plot file in the text.  Note also the
+lpr command to which
+.IR npic 's
+output must be piped.
+.PP
+.I npic
+can be thought of as a program like
+.IR eqn (1)
+or
+.IR tbl (1)
+which looks over your troff output for the places plot files should be included
+in a document.  The beginning and the end of a plot is marked with the
+cent-sign character (\\(ct in troff).
+Around this character you must insert the appropriate
+commands to leave white space on the page for the plot.  Any text placed here
+will be overlaid with the picture material, making it possible to label the
+plot with troff output or equations.  The plot is placed as is in the 
+document, with the X axis parallel to the text's baseline.  It may be scaled 
+to fit in the space provided, but cannot be shifted in position.  See
+.IR nplot (3)
+for details on how to generate a plot of a specific size, or
+.IR pltcomb (1)
+for details on how to modify the size and position of an existing plot.
+.PP
+You can insure enough white space is made available for the plot by putting
+the verttical spacing commands in a keep and floating it to the top or
+the bottom of a page.  See the -ms or the -me format descriptions for
+a discussion of this topic.
+.TP
+.B \-f\ pfiles
+Read a list of plot file names from the file
+.IR pfiles .
+File names should appear on separate lines.  An optional scaling factor
+may appear after each file name.  There should be a file name in
+.I pfiles
+for each cent-sign in your troff document.
+.TP
+.B file\ ...
+Instead of placing the names of the plot files in a file, as above, you may
+instead list them explicitly after the
+.I npic
+command.  Again, there should be one file name for each plot in your
+troff document.
+.SH POSTSCRIPT\ FILES
+.PP
+PostScript files are recognized by beginning with the characters "%!".
+.I npic
+restores the PostScript environment to the default before the file
+constituting the plot is read.  However, you must make sure no
+"showpage" commands are present in the PostScript text you include, and
+you should also remove the Adobe directives that begin with "%%" from the
+text of the plot file, since these can confuse the spooling system while it
+is reversing the pages in the document.
+.SH EXAMPLES
+.PP
+To include a single plot in a troff document that includes equations,
+issue the following commands.  The plot file is assumed to be in the file
+\&'pltfil' and the troff document in the file 'paper':
+.sp 1v
+.ce 1
+eqn paper | \*(Tn -t -ms | npic pltfil | lpr -P\*(Pn
+.PP
+A collection of plots for a manuscript might be placed in a file to save
+typing mistakes when troff-ing the document.  Suppose the names of the plot
+files are in the file 'jgr.plots' and the text of the paper is in the file
+\&'jgr.paper'.  To print up the paper with documents, 
+.sp 1v
+.ce 1
+\*(Tn -t -ms jgr.paper | npic -f jgr.plots | lpr -P\*(Pn
+.SH SEE ALSO
+\*(Tn(1), apen(1), lpr(1), pltcomb(1), nplot(3), plotfil(5)
+.SH AUTHOR
+George Helffrich 1990
+.SH DIAGNOSTICS
+.I npic
+will complain about improper syntax involving the -f option.  If not enough
+plot files are supplied for the pictures designated in the troff document,
+however, a blank space will be left in the resulting document. If the plot file
+is invalid, a warning will be produced but the plot file will be included
+nonetheless.
+.SH "BUGS and WISH LIST"
+.PP
+There is no provision for including plot files with the Y axis parallel to
+the base line of the text.

@@ -1,0 +1,28 @@
+% apen.setup
+% Preface file for apen's PostScript output
+% defines various procedures to make the plots go faster.  These are placed in
+% a local dictonary that is erased after making the plot.
+%%BeginProlog
+/AD 150 dict def
+AD begin
+/M { moveto } def		% expects X and Y on stack
+/L { lineto } def		% expects X and Y on stack
+/S { stroke } def
+/F { fill } def
+/NP { newpath } def
+/C { 0 360 arc } def 		% expects X, Y, radius on stack
+/GS { gsave } def
+/GR { grestore } def
+/SJ { currentlinejoin 		% saves join cap on stack
+  currentlinecap
+  2 setlinejoin 1 setlinecap	% sets join cap to desired values
+} def
+/RJ { setlinecap setlinejoin	% restores join cap from stack
+} def
+/RGB { 				% 3 byte hex string on stack
+  dup 0 get 255 div exch 
+  dup 1 get 255 div exch 
+  2 get 255 div setrgbcolor } def
+GS				% save initial state of device
+end
+%%EndProlog
