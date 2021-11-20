@@ -1,0 +1,30 @@
+DEST=	/usr/local/bin
+MANDIR=	/usr/man/manl
+OWNER=	eao578
+GROUP=	eao578
+CFLAGS=	-O -ansi
+
+all:	plotdb iplotdb
+
+install: all
+	install -s -o ${OWNER} -g ${GROUP} plotdb ${DEST}
+	install -s -o ${OWNER} -g ${GROUP} iplotdb ${DEST}
+
+cmp:	all
+	cmp plotdb /usr/bin/plotdb
+	cmp iplotdb /usr/bin/iplotdb
+
+plotdb.o: plotdb.h
+plotdb:	 plotdb.o
+	cc plotdb.o -o plotdb -l/usr/local/lib/libnplot-64.a
+
+iplotdb.o: iplotdb.h plotdb.h
+iplotdb: iplotdb.o 
+	cc -O iplotdb.o -o iplotdb -l/usr/local/lib/libnplot-64.a
+
+install-man:
+	install -c -o ${OWNER} -g ${GROUP} plotdb.1g ${MANDIR}/plotdb.l
+	install -c -o ${OWNER} -g ${GROUP} plotfil.5 ${MANDIR}/plotfil.l
+
+clean:
+	rm -f *.o plotdb iplotdb core pltfil

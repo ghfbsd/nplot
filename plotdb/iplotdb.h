@@ -1,0 +1,7 @@
+#define COMERR		"iplotdb:  invalid plot command:  %s"
+#define CFORMERR	"iplotdb:  improper command format:  %s"
+#define PFORMERR	"iplotdb:  improper parameter format:  %s"
+#define TFORMERR	"iplotdb:  improper text format:  %s"
+#define TENDERR		"iplotdb:  missing \"end of text\" line\n"
+#define RFORMERR	"iplotdb:  improper raster format:  %s"
+#define RENDERR		"iplotdb:  missing \"end of raster\" line\n"

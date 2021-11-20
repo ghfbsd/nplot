@@ -1,0 +1,354 @@
+.TH PLOTFIL 5 "NU Geology" "May 9, 1988"
+.SH NAME
+plotfil \- vector graphics interface
+.SH DESCRIPTION
+Files of this format are produced by C programs or by FORTRAN and Pascal
+programs using routines described in
+.IR nplot (3),
+are debugged with programs described in
+.IR plotdb (1),
+and are interpreted for devices by the commands
+.IR pen (1)
+and
+.IR tek (1)
+and others.
+A graphics plotfile is a stream of plotting instructions, which are
+executed sequentially.
+Each instruction consists of an ASCII letter, usually
+followed by bytes (8-bit
+.BR char s)
+or wordlets (16-bit
+.BR int s)
+of binary information.  (Note that 16- and 32-bit quantities are byte
+swapped, since they were initially defined on a DEC hardware architecture.)  
+.PP
+The following are the valid plot commands:
+.TP
+.BI m " wordlet1 wordlet2"
+move:  Move current point to 
+.RI ( wordlet1 , " wordlet2" ).
+.TP
+.BI d " wordlet1 wordlet2"
+draw:  Draw a line from the current point to 
+.RI ( wordlet1 , " wordlet2" ).
+.TP
+.BI f " wordlet1"
+fatbase:  Increment the line thickness factor by
+.IR wordlet1 .
+This works best when
+.I wordlet1
+is an even number.
+.TP
+.B b
+break:  Advance to new plotting page in
+.IR pen (1);
+clear screen in
+.IR tek (1).
+Since all plotfiles should begin with
+.BR b ,
+.IR pen (1)
+ignores the first occurence of
+.B b
+while
+.IR tek (1)
+uses it to ensure that the screen is cleared before the first plot.
+.TP
+.B e
+erase:  Identical to
+.BR b .
+.TP
+.B x
+crosshairs:  Display cross-hair cursor (see Tektronix users' manual).
+Effective only in
+.IR tek (1).
+.TP
+.B p
+purge:  Purge plot buffers.  Effective only in
+.IR tek (1).
+.TP
+.B n
+no-op:  No operation performed.
+.TP
+.BI w " wordlet1 wordlet2 wordlet3 wordlet4"
+window:  Reset plotting window to XMIN equals
+.IR wordlet1 ,
+XMAX equals
+.IR wordlet2 ,
+YMIN equals
+.IR wordlet3 ,
+and YMAX equals
+.IR wordlet4 .
+Points outside the plotting window are rendered unaddressable.
+Full screen values for
+.IR pen (1)
+are:  0, 5147; 0, 2047.
+For
+.IR tek (1)
+they are:  0, 1023; 0, 780.
+.TP
+.BI a " wordlets"
+area:  Stipple or outline a convex polygonal region.  (In
+.IR tek (1)
+the shading parameter is ignored and only the outline
+is drawn.)
+.I Wordlet1
+is the shading parameter.  The low 8 bits constitute the bit mask for
+x-direction shading, the high 8 bits that for the y-direction.  If the
+high 8 bits are all unset, the y-direction shading mask is set equal to
+that for the x-direction.  If both masks are zero, the polygon will be
+outlined and not filled.
+.I Wordlet2
+is the number of vertex points forming the polygon.
+The next two
+.IR wordlet s
+are the x- and y-coordinates of the first vertex point,
+the next two those of the second vertex point,
+.I etc.
+The final two
+.IR wordlet s
+are a repeat of
+.I wordlet3
+and
+.IR wordlet4 ,
+the coordinates of the first vertex point.
+.TP
+.BI A " wordlets"
+shade:  fill a polygonal region with a predefinied pattern.  The first
+.I wordlet
+is the pattern number; subsequent wordlets have the same meaning as in the
+.B a
+(area) command.  The patterns are defined in the output routines for the
+particular devices; in
+.I ipen
+pattern 0 is black and pattern 1 is white.
+.I Tek
+simply outlines the polygon without attempting to fill it with a pattern.
+.TP
+.BI c " wordlet1 wordlet2 wordlet3 wordlet4"
+circle: Stipple or outline a circular region.
+\fIWordlet1\fR is the shading parameter, which behaves as in the \fBa\fR
+command.  \fIWordlet2\fR and \fIwordlet3\fR are the \fIx\fR and \fIy\fR
+coordinates of the center of the circle, and \fIwordlet4\fR is the radius.
+.TP
+.BI o " wordlet"
+OR mode:  If
+.I wordlet
+is equal to 1, stippling and patterns will be added to previous
+information using the binary OR operation, making it possible to ``see
+through'' blank parts of a pattern or shading.  If
+.I wordlet
+is equal to 0 (the default), previously plotted data will be completely
+covered.  This has no effect in
+.I tek.
+.TP
+.BI C " byte1 byte2 byte3"
+Color:  The drawing color is changed to a color containing
+.I byte1
+red,
+.I byte2
+green, and
+.I byte3
+blue.  The three
+.I bytes
+are treated as unsigned integers in the range 0-255.  In this scheme, 0,0,0
+represents black and 255,255,255 represents white.  Most plotting programs are
+not capable of rendering colors.  See their individual manual pages for
+details.
+.TP
+.BI t " word bytes"
+text:  Display text.
+.I Word
+is the text key (a full 32-bit word).  The low 5 bits
+specify the character size (0-31).
+The next higher 2 bits specify
+the orientation (0-3) as a multiplier
+to a 90-degree counterclockwise rotation from the normal orientation.
+(The lower left corner of the first
+character is always located at the
+current point.)  The next bit is unused, but following this is an 8 bit
+font code identifier. The highest 16 bits are not used.
+.sp
+The font codes, font names (used to change fonts in mid-string, in the style of
+troff), and descriptions are:
+.nf
+	0	none	Default font
+	1	R	Roman
+	2	I	Italic
+	3	B	Bold
+	4	BI	Bold italic
+	5	GG	German gothic
+	6	RG	Romanesque gothic
+	7	EG	English gothic
+	8	H	Helvetica
+	9	C	Cyrillic
+	10	S	Script
+.fi
+font codes 20 and higher are hardware dependent.
+.sp
+.I Bytes
+is a stream of ASCII characters terminated by  a \(mi1 (0377).  The characters
+SPACE (040), BS (010), TAB (011), NL (012), and CR (015) are handled
+properly.  Font changes can be embedded in this stream of characters (see
+following paragraph) as well as many of 
+.IR troff 's
+text positioning commands.  The text positioning commands are:
+.nf
+	\\s\fIn\fP	set font size to \fIn\fP
+	\\s+\fIn\fP	increase font size by \fI+n\fP units
+	\\s-\fIn\fP	decrease font size by \fI+n\fP units
+	\\u	move text \(12 line up
+	\\d	move text \(12 line down
+.fi
+(Avoid setting the font size to a fixed value, since the results
+depend on the final size of the plot.  Relative size changes work better.)
+.sp
+Font changes can be embedded within the text in the same fashion as
+troff, by using the strings \\fR, \\fI, \\fB, \\f(BI, or \\fP to select the 
+Roman, Italic, Bold, Bold Italic, or previous font, respectively.  This is
+a partial list of fonts; the complete list is given above.  (To change to
+a font named by a two letter code, prefix the code with ``\\f(''.  For
+example, ``\\f(GG'' switches to the German Gothic font.)
+Special characters are accessible by using the troff codes, e.g. \\(ap
+produces the single character \(ap.
+.sp
+An older method of text positioning and font selection exists.  It is described
+here, but it should not be used in the future.
+.sp
+If the character ESC (033) occurs, the next character is
+interpreted as a special function character according to the
+following scheme:
+.RS 1.0i
+.ta \w'0377      'u
+.nf
+D	move current point down one line
+d	move current point down one-half line
+U	move current point up one line
+u	move current point up one-half line
+b	backspace
+g	print Greek analogue of next character (see \fBADDENDUM\fP herein)
+S	increment size
+s	decrement size
+F	increment fatbase
+f	decrement fatbase
+0377	return from text command
+0000	return from text command
+.fi
+.RE
+.TP
+.BI r " wordlets"
+raster:  Display raster data.  The first wordlet in the stream of
+.I wordlets
+is the header \- the low 8 bits of which comprise the
+.IR count ,
+and the high 8 bits of which constitute the
+.I offset
+(in wordlets) from the current point at which plotting is
+to begin.  There then follow
+.I count
+wordlets of raw binary raster data.  There may then follow another
+header and more raster data, 
+.I etc.
+A return from raster mode occurs when a header whose value
+is \(mi1 (0177777) is encountered.
+.IP
+Headers with a negative
+.I count
+value are simply ignored.  However, there is a special escape sequence
+which allows
+.IR tek (1)
+to selectively ignore blocks of raster information intended only for
+.IR pen (1).
+If
+.IR tek (1)
+encounters a header with a
+.I count
+value of \(mi1 (0377) and an
+.I offset
+value of either `t' (0164) or `T' (0124), it will ignore all
+subsequent wordlets of information up to and including the next
+wordlet containing \(mi1 (0377) as either its high or low 8 bits.
+Upon encountering such a wordlet (usually another header with a
+.I count
+value of \(mi1 (0377)),
+.IR tek (1)
+will once again proceed to process headers and raster data normally.
+Thus, headers with
+.I count
+values of \(mi1 (0377) and
+.I offset
+values of either `t' (0164) or `T' (0124) are ignored by
+.IR pen (1),
+but they are recognized by
+.IR tek (1)
+as delimiters bracketing blocks of raster information
+which it is to ignore.
+.SH ADDENDUM
+The following characters have the specified Greek analogues; all
+other characters have SPACE as their analogue.
+.IP
+.ta \w'a         'u +\w'smile-face                    'u +\w'a         'u
+a	alpha	b	beta
+.br
+c	partial	C	del
+.br
+d	delta	D	DELTA
+.br
+e	epsilon	f	phi
+.br
+F	PHI	g	gamma
+.br
+G	GAMMA	h	eta
+.br
+I	integral	l	lambda
+.br
+L	LAMBDA	m	mu
+.br
+n	nu	o	theta
+.br
+O	THETA	p	pi
+.br
+P	PI	r	rho
+.br
+s	sigma	S	SIGMA
+.br
+t	tau	w	omega
+.br
+W	OMEGA	y	psi
+.br
+Y	PSI	~	frown-face
+.br
+}	smile-face
+.SH BUGS
+There are redundancies in the text processing of carriage control
+characters and escape function codes.
+.PP
+Flushing of plot buffers in
+.IR pen (1)
+and
+.IR tek (1)
+is user-transparent; the
+.B p
+command is thus obsolete for these programs.
+.PP
+Note that the size/orientation key for the
+.I text
+command is a full 32-bit
+.I word
+rather than the usual 16-bit
+.IR wordlet .
+This is a result of an omission while converting word lengths in the
+source code for PDP-VAX conversions; it has been left uncorrected in the
+name of upward compatability.  In hindsight, it may actually prove useful
+to have the extra 16 bits available in the text key if floating point
+text orientations are implemented in the future.
+.SH "SEE ALSO"
+.nf
+pen(1), tek(1), troff(1), plotdb(1), nplot(3)
+UNIX Reference Card
+Nroff/Troff User's Manual
+.fi
+.SH "DOCUMENTATION AUTHOR"
+.nf
+Craig Bina - 1982, 1985
+George Helffrich - 1988, 1989
+.fi
