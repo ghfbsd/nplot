@@ -17,7 +17,7 @@ LDJUNK =
 LIBFILES= apen.setup apen.wrapup apen.pattern
 
 CFLAGS = -O
-CFLAGS = -g
+CFLAGS = -g -Wno-implicit
 
 OBJ =	clip.o color.o doplot.o dump.o externs.o initpage.o\
 	is_scale.o io.o putras.o apen.o area.o putsym.o font.o\

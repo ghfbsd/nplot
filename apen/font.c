@@ -223,7 +223,7 @@ getfont(code)
       
       fscanf(fontfile, "%d %d %f", &new->fd_height, &new->fd_baseline,
 	 &new->fd_scale);
-      while ((ich = scanint(5, fontfile)) > 0) {
+      while ((ich = scanint(5, fontfile)) >= 0) { /* changed >0 to >=0 2021-08-29 crb */
 	 int i, nch, offs = (int) 'R';
 	 struct character *newc;
 	 short *sp;
@@ -440,7 +440,7 @@ translate(string,fstring,code)
       font;
 
    /* Scan across characters in the string */
-   while (c = *cp) {
+   while ((c = *cp)) {
       if (c == esc) {
 	 /* Old-style escape character.  Turn old-style code into a new
 	    one. */

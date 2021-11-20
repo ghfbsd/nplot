@@ -7,9 +7,12 @@
 /* PROGRAM should be defined via cc ... -DPROGRAM= to be the
       appropriate file name.  */
 
+#include <stdlib.h>	/* added stdlib.h 2021-08-29 crb */
 #include <stdio.h>
 #include <sys/wait.h>
 #include <strings.h>
+#include <string.h>	/* added string.h 2021-08-29 crb */
+#include <unistd.h>	/* added unistd.h 2021-08-29 crb */
 #include "pic.h"
 
 char *progname;

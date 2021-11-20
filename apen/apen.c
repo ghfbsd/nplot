@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>	/* added time.h 2021-08-29 crb */
 #include <sys/time.h>
 #include <pwd.h>
 #include "apen.h"
@@ -63,7 +64,7 @@ int main(argc,argv)
     }
 
     /* Set up default footer information. */
-    {  long now = time(0);
+    {  time_t now;
        struct timeval tp;
        struct passwd *pwd = (struct passwd *)getpwuid(getuid());
        footer.fi_footer = 1;
@@ -71,6 +72,7 @@ int main(argc,argv)
        strcpy(footer.fi_user,pwd->pw_name);
        footer.fi_dir = getcwd(malloc(MAXPATHLEN),MAXPATHLEN);
        footer.fi_date = malloc(26);
+       time(&now);
        strcpy(footer.fi_date,ctime(&now));
     }
 
@@ -172,7 +174,7 @@ int main(argc,argv)
        printf("%%!PS-Adobe-3.0\n%%%%Pages: (atend)\n");
     else {
        /* Make temporary file, attach to stdout */
-       char *epsnm = tempnam(NULL,"apen"); 
+       char *epsnm = mktemp("/tmp/apen.XXXXXX"); 
        epsfd = dup(1);
        if (epsnm == NULL || epsfd == -1 ||
           NULL == freopen(epsnm,"w+", stdout)) {
