@@ -5,12 +5,17 @@
  * splotdb.c     Craig Bina, 1982, 1985
  */
 
+static void
+    getlin(void), getsym(void), getarea(void), getras(void), doread(void),
+    getcirc(void), getApat(void);
+
 #include	<stdio.h>
 #include	<stdlib.h>	/* added stdlib.h 2021-08-29 crb */
 #include	"plotdb.h"
 
 FILE *pltin, *temp;
 char *cptr;
+
 int fgetc(), getw();
 
 main(argc, argv)
@@ -38,7 +43,7 @@ main(argc, argv)
 	    }
 	    continue;
 	}
-	if (argc)
+	if (argc) {
 	    if ((temp = freopen(cptr, "r", pltin)) == NULL) {
 		fprintf(stderr, "plotdb: cannot open %s\n", cptr);
 		continue;
@@ -47,6 +52,7 @@ main(argc, argv)
 		if (filenam)
 		    printf(FILENAME, cptr);
 	    }
+        }
 
 	doread();
 
@@ -55,6 +61,7 @@ main(argc, argv)
     exit(1);
 }
 
+void
 doread()
 {
     register int c;
@@ -116,7 +123,7 @@ doread()
 	    getcirc();
 	    break;
 	  case 'l':	/* draw line */
-	    getline();
+	    getlin();
 	    break;
 	  case 'C':	/* Set RGB color */
 	    r = getc(pltin);
@@ -130,6 +137,7 @@ doread()
     }
 }
 
+void
 getarea()
 {
     int xfirst, yfirst, x, y;
@@ -161,7 +169,8 @@ getarea()
 	printf(AREAERROR);
 }
 
-getline()
+void
+getlin()
 {
     int x, y, npts;
     register int i;
@@ -175,6 +184,7 @@ getline()
     }
 }
 
+void
 getApat()
 {
     int xfirst, yfirst, x, y;
@@ -195,7 +205,8 @@ getApat()
     if ((xfirst != x) || (yfirst != y))
 	printf(AREAERROR);
 }
-
+ 
+void
 getcirc()
 {
     int x, y, rad, shade, xmask, ymask;
@@ -218,6 +229,7 @@ getcirc()
     printf(CIRCLE, xmask, ymask, x, y, rad);
 }
 
+void
 getsym()
 {
     register int c;
@@ -283,12 +295,13 @@ getsym()
     }
 }
 
+void
 getras()
 {
     int w, count, offset;
 
     printf(RASTHEAD);
-    while (w = vgeth(pltin)) {
+    while ((w = vgeth(pltin))) {
 	count = (w & 0377);
 	offset = (w >> 8) & 0377;
 	printf(RASTKEY, count, offset);

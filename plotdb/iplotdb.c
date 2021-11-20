@@ -23,6 +23,10 @@ FILE *pltin, *temp;
 char line[MAXLINE];
 char *cptr;
 
+void
+    doproc(void), procras(void), procarea(void), procline(void),
+    procapat(void), proccirc(void), procsym(void), putword(int), textend(void);
+
 main(argc, argv)
     int argc;
     char **argv;
@@ -52,12 +56,13 @@ main(argc, argv)
     exit(1);	/* fixed empty argument 2021-08-28 crb */
 }
 
+void
 doproc()
 {
     register int e;
     int x, y, xmax, ymax, fat, r, g, b;
 
-    while (getline(line, MAXLINE) != EOF) {
+    while (getlin(line, MAXLINE) != EOF) {
 	switch (*line) {	/* command list */
 	  case '*':	/* error or comment line */
 	    break;
@@ -147,6 +152,7 @@ doproc()
     }
 }
 
+void
 procarea()
 {
     int x, y;
@@ -162,7 +168,7 @@ procarea()
     putword(shade);
     putword(npts);
     for (i = 0; i <= npts; i++) {
-	egetline(line, MAXLINE);
+	egetlin(line, MAXLINE);
 	e = sscanf(line, AREAPOINT, &x, &y);
 	pck(e - 2);
 	putword(x);
@@ -170,6 +176,7 @@ procarea()
     }
 }
 
+void
 procline()
 {
     int x, y;
@@ -181,7 +188,7 @@ procline()
     putchar('l');
     putword(npts);
     for (i = 0; i < npts; i++) {
-	egetline(line, MAXLINE);
+	egetlin(line, MAXLINE);
 	e = sscanf(line, POINT, &x, &y);
 	pck(e - 2);
 	putword(x);
@@ -189,6 +196,7 @@ procline()
     }
 }
 
+void
 procapat()
 {
     int x, y;
@@ -201,7 +209,7 @@ procapat()
     putword(pattern);
     putword(npts);
     for (i = 0; i <= npts; i++) {
-	egetline(line, MAXLINE);
+	egetlin(line, MAXLINE);
 	e = sscanf(line, AREAPOINT, &x, &y);
 	pck(e - 2);
 	putword(x);
@@ -209,6 +217,7 @@ procapat()
     }
 }
 
+void
 proccirc()
 {
     int x, y, rad, xmask, ymask, shade, e;
@@ -225,6 +234,7 @@ proccirc()
     putword(rad);
 }
 
+void
 procsym()
 {
     register int e;
@@ -236,7 +246,7 @@ procsym()
     key = (size & 037) | ((orient << 5) & 0140) | ((font << 8) & 0xff00);
     putchar('t');
     putlong(key);
-    while (egetline(line, MAXLINE)) {
+    while (egetlin(line, MAXLINE)) {
 	switch (*line) {
 	  case '0':
 	    e = sscanf(line, TEXTNUM, &temp);
@@ -254,8 +264,11 @@ procsym()
 	    break;
 	  case 'E':
 	    e = sscanf(line, TEXTCESC, &c);
-	    if (e - 1)
-		e = sscanf(line, TEXTNESC, &c);
+	    if (e - 1) {
+                unsigned int oct;
+		e = sscanf(line, TEXTNESC, &oct);
+                c = oct;
+            }
 	    tck(e - 1);
 	    putchar(033);
 	    if ((c == -1) || (c == 0)) {
@@ -293,6 +306,7 @@ procsym()
     }
 }
 
+void
 procras()
 {
     register int e;
@@ -301,19 +315,19 @@ procras()
     e = strcmp(line, RASTHEAD);
     cck(e);
     putchar('r');
-    while (egetline(line, MAXLINE)) {
+    while (egetlin(line, MAXLINE)) {
 	e = sscanf(line, RASTKEY, &count, &offset);
 	pck(e - 2);
 	w = (count & 0377) | ((offset & 0377) << 8);
 	putword(w);
 	if (w == -1) {
-	    egetline(line, MAXLINE);
+	    egetlin(line, MAXLINE);
 	    e = strcmp(line, RASTEND);
 	    ck(e, RENDERR);
 	    return;
 	}
 	while (count-- > 0) {
-	    egetline(line, MAXLINE);
+	    egetlin(line, MAXLINE);
 	    e = sscanf(line, RASTWORD, &w);
 	    rck(e - 1);
 	    putword(w);
@@ -321,6 +335,7 @@ procras()
     }
 }
 
+void
 putword(w)
     int w;
 {
@@ -328,7 +343,7 @@ putword(w)
     return;
 }
 
-getline(s, max)
+getlin(s, max)
     char s[];
 int max;
 
@@ -347,25 +362,26 @@ int max;
     return (i);
 }
 
-egetline(s, m)
+egetlin(s, m)
     char s[];
 int m;
 
 {
     register int i;
 
-    if ((i = getline(s, m)) == EOF) {
+    if ((i = getlin(s, m)) == EOF) {
 	fprintf(stderr, "iplotdb:  premature EOF: %s\n", cptr);
 	exit(1);
     }
     return (i);
 }
 
+void
 textend()
 {
     register int e;
 
-    getline(line, MAXLINE);
+    getlin(line, MAXLINE);
     e = strcmp(line, TEXTEND);
     ck(e, TENDERR);
 }
