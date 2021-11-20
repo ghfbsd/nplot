@@ -7,5 +7,6 @@ Consists of:
 3) Program to render a plot file as a .ps (PostScript) or .eps (Encapsulated PostScript) file (apen).
 4) Program to render a plot file using X on a display (xplot).
 5) Plot file editor/debugger (plotdb, consisting of plotdb, iplotdb, splotdb).
+6) Plot file combiner and annotator (pltcomb)
 
 Other components will be added as other ex-NU contributors provide them.
