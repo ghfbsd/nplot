@@ -1,0 +1,185 @@
+.TH PLTCOMB 1G "December 2, 1987" "NU Geological Sciences"
+.SH NAME
+pltcomb \- Re-size, re-scale, and/or combine a collection of plot 
+files into a single plot.
+.SH SYNOPSIS
+.TP
+.B pltcomb\c
+[ {
+.BI -x value
+|
+.BI -y value
+|
+.BI - value
+|
+.BI - value\c
+.B x
+|
+.BI - value\c
+.B y
+|
+.BI -f value
+|
+.BI -s value
+|
+.BI -o value
+} ...
+.I plotfile
+] ...
+.SH DESCRIPTION
+.I pltcomb
+re-sizes and combines plot files into a single new plot file.  Typically, it
+is used to take two or more existing plot files, offset them horizontally
+and/or vertically, and combine them into a single resulting plot.
+.IR pltcomb 's
+re-scaling properties also make it useful to size and position an existing plot
+in a particular way, for example for inclusion in a troff document with
+.IR pic (1).
+The new plot file is written to the standard output, which may be directed to
+.IR ipen (1)
+for immediate plotting, or saved in a file for later use.
+.PP
+.I pltcomb
+views its parameters as a series of plot file names to be successively copied
+to the output stream.  By default, each file is copied without change to the
+output stream.  This action may be modified by preceding the plot file
+with placement and scaling directions to adjust the appearance of the 
+combined plot.  These directions are given as a series of options, defined
+below, which accumulate in effect up to the mention of the
+name of the plot file to which they apply.  After the plot file is processed
+the options revert to their default state.  (If the name of the plot file is
+\&'-', then the plot is read from the standard input.)
+.PP
+.IR "Options that apply to files" .
+.TP 
+.BI -x value
+Offset the plot in the X direction.
+.I value
+is a numeric value followed by either 'i', 'c', or 'u' designating a value in
+inches, centimeters, or raster units, respectively.  If none of these 
+scale factors are given, the value is interpreted to be in plot raster units 
+(which is not generally useful; see
+.IR plotfil (5)
+for details, however).  For example, to offset the plot by 2.54 centimeters
+in the X direction, -x2.5i would be suitable.  The default offset is zero
+inches.
+.TP
+.BI -y value
+This behaves like -x, but offsets in the Y direction.
+.TP
+.IB -value x
+Scale the X dimension of the plot with the multiplicative factor given by
+.IR value .
+Scaling is performed
+.I after
+any translations in the X or Y directions.  The default scale factor is 1.0
+(equivalent to no scaling whatsoever).
+.TP
+.IB -value y
+Same as the above, except scaling in only the Y dimension.
+.TP
+.I -value
+Scale both the X and Y dimensions of the plot.  This maintains the aspect ratio
+of the original plot.  Again, scaling is done
+.I after
+any translations in the X or Y directions.  Default value is 1.0.
+.TP
+.BI -f value
+Fatten text and lines drawn in the plot by
+.IR value .
+This makes the appearance of the plot denser to the eye.  Typical values for
+fattening range from 2-4.  Default value is zero additional fattening.
+.TP
+.BI -t type
+This designates the nature of the file's contents, which is usually plot
+data.
+.I type
+should be
+.B v
+for plot files, which is the default value, and need not be specified.
+If the file contains text to annotate the plot file (which may be useful
+if the text comprises many lines),
+.I type
+should be
+.BR t .
+See below for further comments regarding adding annotating text strings to
+plot files.
+The third type of file contains binary raster image data, in Impress format,
+for which
+.I type
+should be
+.BR r .
+(See
+.IR plotfil (5)
+for further information -- usage of this feature is abstruse.)
+.PP
+.IR "Options that apply to text strings" .
+Text can also be added by
+.I pltcomb 
+to the combined plot for annotation of a plot file 
+which is more convenient that incorporating it through
+.IR nplot (3)
+(which likely involves recompiling the program that produces the plot, etc.).
+The position of the text, its orientation, size and font are specified as a
+series of instructions which precede the string of text, similar to how plot
+files were handled above.  All the preceding instructions also apply to text 
+strings.  The following options are text string specific.
+.TP
+.BI -s value
+The value given specifies the size of the characters in the text.  This should
+be a value between 1 and 31; 6 is a typical size.
+.TP
+.BI -o value
+The value specifies the orientation of the text on the plot, in multiples of
+90 degrees clockwise from the X direction.
+.TP
+\fB\&'"\fItext string\fB"'
+.BR
+This is the text string to be printed.  Note that it must be included in both
+primes and quotes (due to the shell stripping off the outer set).  The text
+is placed with the bottom left of the first character at the position set with
+.BI -x xpos
+and
+.BI -y ypos
+(see above).
+.SH EXAMPLES
+.PP
+To stack two plots above one another and add a title to the bottom of the
+plot, the following command could be used.  Assume the top plot is in the file,
+\&'plt.top' and bottom plot is in the file 'plt.bot'.  Both plots are 
+shifted up (in the Y direction) to make room for the title string placed at
+the bottom.  The result is directly transmitted to
+.IR ipen .
+.nf
+pltcomb -y1i plt.bot -y4.5i plt.top -x2i -s6 '"Title"' | ipen
+.fi
+.PP
+This example shifts a plot (in the file 'pltfil') and scales it to half size,
+saving it for later use.
+.nf
+pltcomb -x-0.5i -y-0.5i -0.5 pltfil > gca.fig1
+.fi
+.PP
+This prints out a simple label in the German Gothic font.
+.nf
+pltcomb -x1i -y4i -s12 '"\\f(GGJohn Brodholt"' \\
+	-x1i -y3.6i -s12 '"\\f(GGGenny the Dog"' | ipen -f4
+.fi
+.SH SEE ALSO
+ipen(1), nplot(3), plotfil(5)
+.SH AUTHOR
+George Helffrich 1986
+.SH DIAGNOSTICS
+.TP
+\&'unrecognized argument'
+One of the options was incorrectly specified.
+.TP
+\&'cannot open ...'
+The plot file named does not exist.  Forgetting to enclose a text string in
+both primes and quotes may elicit this message also.
+.TP
+\&'invalid plot type'
+The
+.B -t
+option was not used correctly.
+.SH "BUGS and WISH LIST"
