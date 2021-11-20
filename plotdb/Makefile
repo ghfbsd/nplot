@@ -2,8 +2,8 @@
 
 DEST=	/usr/local/bin
 MANDIR=	/usr/man/manl
-OWNER=	eao578
-GROUP=	eao578
+OWNER=	george
+GROUP=	staff
 CFLAGS=	-ansi -Wno-implicit
 
 all:	plotdb iplotdb
