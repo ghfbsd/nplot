@@ -22,7 +22,7 @@ LDJUNK =
 
 # Following are for Darwin systems
 XLIBS=	-L/usr/X11R6/lib -lXaw -lXmu -lXext -lXt -lX11 -lm
-CFLAGS = -g -I/usr/X11R6/include
+CFLAGS = -g -I/usr/X11R6/include -Wno-implicit-int -Wno-implicit-function-declaration
 
 OBJ =	clip.o doplot.o dump.o externs.o \
 	is_scale.o xplot.o area.o putsym.o font.o \
