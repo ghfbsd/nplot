@@ -7,7 +7,7 @@
 #include "xplot.h"
 #include "pat.h"
 
-circshad()
+void circshad()
 {
     XPoint center;
     int radius;

@@ -11,9 +11,7 @@
  */
 
 /*LINTLIBRARY*/
-npat_(pn,x,y,pat,para)
-	int *pn , *pat ;
-	float *x , *y , *para ;
+void npat_(int *pn, float *x, float *y, int *pat, float *para)
 {
 	float xplt,yplt;
 	short xclos,yclos;
@@ -26,13 +24,13 @@ npat_(pn,x,y,pat,para)
 	n = (int)(*pn);
 	if(n < 0) {
 		fprintf(stderr,"NPAT: error, negative point count\n");
-		return(-1);
+		return;
 	}
-	if (n==0) return(0);
+	if (n==0) return;
 
 	if(para[11]*para[19] == 0. ) {
 		fprintf(stderr, "NPAT: error, nplot has not been called\n");
-		return(-1);
+		return;
 	}
 
 	dx = (para[4]-para[2])/(RASTERS *para[0]) ;
@@ -60,5 +58,5 @@ npat_(pn,x,y,pat,para)
 	/* close polygon */
 	vputh(xclos, plotfile);
 	vputh(yclos, plotfile);
-	return(0);
+	return;
 }

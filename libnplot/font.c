@@ -118,9 +118,7 @@ FC ft[] = {
  *          the input file, ignoring newlines. (scanf won't work
  *          because it also ignores blanks)
  */
-int     scanint (n,file)
-int     n;
-FILE	*file;
+int     scanint (int n, FILE *file)
 {
     char    buf[20];
     int     i, c;
@@ -141,8 +139,7 @@ char file_prefix[] = FONTFILE_PREFIX;
 
 FILE *fontfile;
 
-void cleanup(msg)
-   char *msg;
+void cleanup(char *msg)
 /* Close font file if open, and print message if one is given. */
 {
    if (fontfile != NULL) fclose(fontfile);
@@ -151,8 +148,7 @@ void cleanup(msg)
 }
 
 struct fontdescr *
-getfont(code)
-   int code;
+getfont(int code)
 /*  Load the font which is indicated by the value 'code'.  If the font
    is already present, fine.  Otherwise, read it in if there is a free
    slot.  The routine returns a pointer if loaded successfully, 
@@ -338,8 +334,7 @@ struct two_letter_codes {
 };
 
 FC
-special_character(string)
-   char *string;
+special_character(char *string)
 /* Decode the two characters into a special character code.  If invalid,
    eat up two characters and return the undefined character code. */
 {
@@ -383,9 +378,7 @@ struct encode_font {
    {"  ", 0}	/* End-of-list */
 };
 
-short
-font_change(cp)
-   char *cp;
+short font_change(char *cp)
 {
    char id[2];
    struct encode_font *ef;
@@ -405,10 +398,7 @@ font_change(cp)
    return(-1);
 }
 
-int
-nfont_(id,lid)
-   char *id;
-   int lid;
+int nfont_(char *id, int lid)
 /* Return internal font code for name given by the id string. */
 {
 
@@ -422,12 +412,7 @@ nfont_(id,lid)
    return(font_change(id-1));
 }
 
-void
-translate(string,len,fstring,code)
-   char *string;
-   int len;
-   FC *fstring;
-   int code;
+void translate(char *string, int len, FC *fstring, int code)
 /* Translate the character string from external representation into
    internal representation (font codes).  Characters are translated into
    individual codes.  Commands are translated into a command code, followed
@@ -546,9 +531,7 @@ translate(string,len,fstring,code)
    *sp = fc_end_of_string;
 }
 
-strsize(string, code)
-   enum fontcode *string;
-   int code;
+int strsize(enum fontcode *string, int code)
 /* Return the size of a string in units of the font size.  The string
    has already been coded into fontcode format.  The code is the
    id of the prevailing font at the beginning of the string. */
@@ -610,10 +593,7 @@ strsize(string, code)
    return((int)(size+0.5));
 }
 
-txtsize(characters, len, code)
-   char *characters;
-   int len;
-   int code;
+int txtsize(char *characters, int len, int code)
 /* Return the size of the character string using the prevailing font
    given by code.  */
 {

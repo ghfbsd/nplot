@@ -149,4 +149,5 @@ struct fontdescr {		/* Information about a font */
    };
 
 struct fontdescr *
-   getfont();
+   getfont(int);
+int txtsize(char *, int, int);

@@ -4,7 +4,7 @@ DEST=	/usr/local/bin
 MANDIR=	/usr/man/manl
 OWNER=	george
 GROUP=	staff
-CFLAGS=	-ansi -Wno-implicit
+CFLAGS=	-ansi -Wno-implicit -std=c23
 
 all:	plotdb iplotdb
 

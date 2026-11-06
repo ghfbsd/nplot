@@ -8,9 +8,7 @@
 extern int plotted, needmove;
 
 void
-dump(x1,y1,x2,y2)
-	int x1,y1,x2,y2;
-{
+dump(int x1,int y1,int x2,int y2){
 	static int xlst, ylst;
 
 	if( clip(&x1,&y1,&x2,&y2) ) {

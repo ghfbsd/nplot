@@ -24,8 +24,6 @@ struct txtinfo {		/* Information about current text font */
 
 enum sticode {tcopy, tsize, tfont, torient, theight};
 
-void draw(), form(), convert(), fatcheck();
-
 /* External variables defined herein */
 
 FILE *plotfile;
@@ -34,11 +32,367 @@ short fatsave, origin_offset;
 
 char *progname = "NPLOT";
 
-nplot_(pn,x,y,xst,yst,cap,para,lxst,lyst,lcap)
-	int *pn ;
-	float *x , *y , *para ;
-	char *xst , *yst , *cap ;
-	int lxst, lyst, lcap ;
+#define MAX_FONT_CODE	255
+#define MAX_FONT_SIZE	31
+
+void fmag(float x, float *xmag)
+{
+	float xa ;
+	if ( x == 0.) {
+		*xmag = 0. ;
+		return  ;
+	    }
+	*xmag = 1. ;
+	xa = fabs((double) x);
+	while ( *xmag < xa ) *xmag *= 10. ;
+	while( *xmag > xa ) *xmag *=  .1  ;
+	return;
+}
+
+void fint(float x1,float x2,float *xi)
+{
+	float xag ;
+	fmag((float) (fabs((double) x1)+fabs((double) x2)), &xag);
+	*xi = -10.* xag ;
+	xag *= 10. ;
+l10:	while( *xi < x1 ) *xi += xag ;
+	if( *xi < x2 ) return;
+	*xi -= xag ;
+	xag *= .1 ;
+	goto l10 ;
+}
+
+void axmi(int n, float *x, float *xmi, float *xma, float *xskl, float *para)
+{
+	float x1 , x2 , xx , dx, csp, symsiz ;
+	int i ;
+	x1 = x2 = *x ;
+	for(i = 1 ; i < n ; i++ )
+	{
+		xx = x[i] ;
+		if(xx  <  x1 ) x1 = xx ;
+		if(xx  >  x2 ) x2 = xx ;
+	}
+	if (x1 == x2) {
+		x1=0.;
+		x2=2.*x2+(x2==0.);
+	}
+	dx = (x2 - x1 ) / 9. ;
+	symsiz = para[13];
+	if (symsiz < 0.) symsiz=0.;
+	csp = symsiz*.5 * ( x2 - x1 )/ ( RASTERS * *xskl ) ;
+	x2 += csp ;
+	x1 -= csp ;
+	if(dx == 0 ) return;
+	fint(x2,x2+dx,xma);
+	fint(-x1,dx-x1,xmi);
+	*xmi *= -1. ;
+	return;
+}
+
+void grid(float *xmi, float *xma, float *xgo, float *xgi) 
+{
+	static float r[4] = { 1. ,2. , 5., 10.  } ;
+	double min = *xmi, max = *xma;
+	float  xgii , xgmag ,xg ;
+	short i ;
+
+	if( min == max ) return ;
+
+	/* Take care of reversed axes */
+	if( min > max ) {
+	    double temp = min;
+	    min = max;
+	    max = temp;
+	}
+
+	fint(min,max,xgo);
+	xgii = ( max - min ) / 3. ;
+	fmag(xgii,&xgmag ) ;
+	*xgi = xgmag ;
+	for(i = 0 ; i < 4 ; i++)
+	{
+		xg = xgmag*r[i] ;
+		if(xg > xgii ) break ;
+		*xgi = xg ;
+	}
+	while(*xgo >= min ) *xgo -= *xgi ;
+	*xgo += *xgi ;
+	return;
+}
+
+void settxtinfo(struct txtinfo *where, enum sticode what, int to_what)
+
+/* Set the item in the text descriptor described by 'what' to the
+   value given by to_what.
+*/
+
+{
+   switch (what) {
+      case tfont:
+	 where->font = to_what <= MAX_FONT_CODE ? to_what : 0;
+	 break;
+      case tsize:
+	 where->size = to_what <= MAX_FONT_SIZE ? to_what : 0;
+	 break;
+      case torient:
+	 where->orientation = (enum orient) to_what;
+	 break;
+      default:
+	 fprintf(stderr,
+	    "NPLOT: Internal error - settxtinfo called with invalid code\n");
+	 exit(1);
+   }
+}
+
+/* see if line thickness has changed */
+void fatcheck(float *para)
+{
+	char f = 'f';
+	if (fatsave != para[14]) {
+		fatsave = para[14];
+		fputc('f', plotfile);
+		vputh(fatsave, plotfile);
+	}
+}
+
+void form(float x, char *str, int *l){
+	sprintf(str,"%g",x);
+	*l = 0;
+	while(*(str++) ) (*l)++ ;
+	if (*(str-2) == '.' ) (*l)-- ;
+}
+
+int adjust(char *str, int l){
+	int jj = l<=0 ? 0 : strlen(str);
+        return(MIN(jj,l));
+}
+
+void draw(char cc, short ix, short iy)
+{
+	fputc(cc, plotfile);
+	vputh(ix, plotfile);
+	vputh(iy, plotfile);
+}
+
+void pltext(short ix, short iy, struct txtinfo *info, char *text, int nl)
+{
+	int item;
+	/*
+	union {
+	   struct textword tword;
+	   long int text_word;
+	} item;
+	*/
+
+	/* Copy font information from text structure into the
+	   word in preparation for writing out. */
+	/*
+	item.tword.font_code = (unsigned) info->font;
+	item.tword.orientation = (unsigned) info->orientation;
+	item.tword.size = (unsigned) info->size;
+	*/
+	item = (info->size & 0x001f)
+	   | (((int)info->orientation << 5) & 0x0060)
+	   | ((info->font << 8) & 0xff00);
+
+	/* Move to origin of text and put the text there */
+	(void) draw('m',ix,iy);
+	(void) fputc('t', plotfile);
+	(void) vputw(item, plotfile);
+	(void) fwrite(text, nl, 1, plotfile);
+	(void) fputc('\0', plotfile);
+}
+
+#define MAXVERT 200
+void plpoly(short ix, short iy, int ik, int ipsymb, int shad)
+{
+    int np,skey,ic,symb;
+    short vert[MAXVERT+1][2];
+    short radius;
+    symb = ipsymb & 0x000f;
+    skey=(shad&0377)|((shad&0377)<<8);
+    if ((ipsymb>>4) & 0x0001) skey = 0;
+    np=3;
+    switch (symb) {			/* polygon types */
+	case 1:		/* upright triangle */
+	    vert[0][0]=ix-ik/2.;
+	    vert[0][1]=iy-ik/3.464;
+	    vert[1][0]=ix+ik/2.;
+	    vert[1][1]=iy-ik/3.464;
+	    vert[2][0]=ix;
+	    vert[2][1]=iy+ik/1.732;
+	    break;
+	case 2:		/* inverted triangle */
+	    vert[0][0]=ix-ik/2.;
+	    vert[0][1]=iy+ik/3.464;
+	    vert[1][0]=ix+ik/2.;
+	    vert[1][1]=iy+ik/3.464;
+	    vert[2][0]=ix;
+	    vert[2][1]=iy-ik/1.732;
+	    break;
+	case 3:		/* rightward triangle */
+	    vert[0][0]=ix-ik/3.464;
+	    vert[0][1]=iy+ik/2.;
+	    vert[1][0]=ix-ik/3.464;
+	    vert[1][1]=iy-ik/2.;
+	    vert[2][0]=ix+ik/1.732;
+	    vert[2][1]=iy;
+	    break;
+	case 4:		/* leftward triangle */
+	    vert[0][0]=ix+ik/3.464;
+	    vert[0][1]=iy+ik/2.;
+	    vert[1][0]=ix+ik/3.464;
+	    vert[1][1]=iy-ik/2.;
+	    vert[2][0]=ix-ik/1.732;
+	    vert[2][1]=iy;
+	    break;
+	case 5:		/* square */
+	    vert[0][0]=ix-ik/2.828;
+	    vert[0][1]=iy+ik/2.828;
+	    vert[1][0]=ix-ik/2.828;
+	    vert[1][1]=iy-ik/2.828;
+	    vert[2][0]=ix+ik/2.828;
+	    vert[2][1]=iy-ik/2.828;
+	    vert[3][0]=ix+ik/2.828;
+	    vert[3][1]=iy+ik/2.828;
+	    np=4;
+	    break;
+	case 6:		/* diamond */
+	    vert[0][0]=ix;
+	    vert[0][1]=iy+ik/1.7;
+	    vert[1][0]=ix-ik/2.5;
+	    vert[1][1]=iy;
+	    vert[2][0]=ix;
+	    vert[2][1]=iy-ik/1.7;
+	    vert[3][0]=ix+ik/2.5;
+	    vert[3][1]=iy;
+	    np=4;
+	    break;
+	case 7: 		/* hexagon */
+	    vert[0][0]=ix-ik/2.;
+	    vert[0][1]=iy;
+	    vert[1][0]=ix-ik/4.;
+	    vert[1][1]=iy-ik/2.309;
+	    vert[2][0]=ix+ik/4.;
+	    vert[2][1]=iy-ik/2.309;
+	    vert[3][0]=ix+ik/2.;
+	    vert[3][1]=iy;
+	    vert[4][0]=ix+ik/4.;
+	    vert[4][1]=iy+ik/2.309;
+	    vert[5][0]=ix-ik/4.;
+	    vert[5][1]=iy+ik/2.309;
+	    np=6;
+	    break;
+	case 9:		/* plus */
+	    { float s1=ik/2.828,
+		    s2=ik/2.828/10.0;
+	    vert[0][0]=ix-s2; vert[0][1]=iy-s1;
+	    vert[1][0]=ix+s2; vert[1][1]=iy-s1;
+	    vert[2][0]=ix+s2; vert[2][1]=iy-s2;
+	    vert[3][0]=ix+s1; vert[3][1]=iy-s2;
+	    vert[4][0]=ix+s1; vert[4][1]=iy+s2;
+	    vert[5][0]=ix+s2; vert[5][1]=iy+s2;
+	    vert[6][0]=ix+s2; vert[6][1]=iy+s1;
+	    vert[7][0]=ix-s2; vert[7][1]=iy+s1;
+	    vert[8][0]=ix-s2; vert[8][1]=iy+s2;
+	    vert[9][0]=ix-s1; vert[9][1]=iy+s2;
+	    vert[10][0]=ix-s1; vert[10][1]=iy-s2;
+	    vert[11][0]=ix-s2; vert[11][1]=iy-s2;
+	    vert[12][0]=ix-s2; vert[12][1]=iy-s1;
+	    np=13;
+	    break;
+	    }
+	case 10:	/* X/cross */
+	    { float s1=ik/2.828,
+		    s2=ik/2.828/10.0;
+	    vert[0][0]=ix;    vert[0][1]=iy-s2;
+	    vert[1][0]=ix+s1-s2; vert[1][1]=iy-s1;
+	    vert[2][0]=ix+s1; vert[2][1]=iy-s1+s2;
+	    vert[3][0]=ix+s2; vert[3][1]=iy;
+	    vert[4][0]=ix+s1; vert[4][1]=iy+s1-s2;
+	    vert[5][0]=ix+s1-s2; vert[5][1]=iy+s1;
+	    vert[6][0]=ix;    vert[6][1]=iy+s2;
+	    vert[7][0]=ix-s1+s2; vert[7][1]=iy+s1;
+	    vert[8][0]=ix-s1; vert[8][1]=iy+s1-s2;
+	    vert[9][0]=ix-s2; vert[9][1]=iy;
+	    vert[10][0]=ix-s1;vert[10][1]=iy-s1+s2;
+	    vert[11][0]=ix-s1+s2; vert[11][1]=iy-s1;
+	    vert[12][0]=ix;   vert[12][1]=iy-s2;
+	    np=13;
+	    break;
+	    }
+	case 8:		/* circle and unrecognized codes */
+	default:			/* filled circle */
+	    radius = ik/2;
+	    fputc('c', plotfile);
+	    vputh(skey, plotfile);	/* shading mask */
+	    vputh(ix, plotfile);	/* center */
+	    vputh(iy, plotfile);
+	    vputh(radius, plotfile);
+	    return;	/* This isn't done as a polygon, so leave */
+    }
+    fputc('a', plotfile);
+    vputh(skey, plotfile);
+    vputh(np, plotfile);
+    for(ic=0;ic < np;ic++) {
+	vputh(vert[ic][0], plotfile);
+	vputh(vert[ic][1], plotfile);
+    }
+    /* close polygon */
+    (void) vputh(vert[0][0], plotfile);
+    (void) vputh(vert[0][1], plotfile);
+}
+
+void gettxtinfo(
+   struct txtinfo *where,
+   enum sticode what,
+   union {
+      int integer;
+      struct txtinfo structure;
+   } *to_what
+)
+
+/* Get the item in the text descriptor described by 'what' and return
+   it to the thing pointed to by to_what.
+*/
+{
+   struct fontdescr *fd;
+
+   switch (what) {
+      case tfont:
+	 to_what->integer = (int) where->font; break;
+      case tsize:
+	 to_what->integer = (int) where->size; break;
+      case torient:
+	 to_what->integer = (int) where->orientation; break;
+      case tcopy:
+	 to_what->structure = *where; break;
+      case theight:
+	 fd = getfont(where->font);
+	 if (fd == NULL) {
+	    fprintf(stderr, 
+	       "NPLOT: Couldn't get width for font %d, using default.\n",
+	       where->font);
+	    fd = getfont(0);
+	 }
+	 to_what->integer = fd->fd_height;
+	 break;
+      default:
+	 fprintf(stderr,
+	    "NPLOT: Internal error - gettxtinfo called with invalid code\n");
+	 exit(1);
+   }
+}
+
+int nplot_(
+   int *pn,
+   float *x, float *y,
+   char *xst, char *yst, char *cap,
+   float *para,
+   int lxst,
+   int lyst,
+   int lcap)
 /*
 c   VAX VERSION OF nplot.c is a plotting subroutine for "FORTRAN" programs.
 c
@@ -183,17 +537,14 @@ c
 c       Add code to use Fortran character string length.
 c       G. Helffrich 6/3/99.
 c
+c       C23 compatibility.
+c       G. Helffrich 11/6/26.
+c
 */
 {
 	static char pfile[81] = PLOTFILE ;
 	static char ev_plotfile[] = EV_PLOTFILE;
 	static char ev_debug[] = EV_NPLOT_DEBUG;
-
-	char *getenv();
-	void pltext(),
-             plpoly(),	       /* added plpoly() 2021-08-29 crb */
-	     gettxtinfo(),
-	     settxtinfo();
 
 	float xplt,yplt,dxplt,dyplt;
 	double dx, dy;
@@ -622,274 +973,6 @@ c
 
 }
 
-axmi(n,x,xmi,xma,xskl,para)
-	int n ;
-	float *x, *xmi , *xma , *xskl , *para ;
-{
-	float x1 , x2 , xx , dx, csp, symsiz ;
-	int i ;
-	x1 = x2 = *x ;
-	for(i = 1 ; i < n ; i++ )
-	{
-		xx = x[i] ;
-		if(xx  <  x1 ) x1 = xx ;
-		if(xx  >  x2 ) x2 = xx ;
-	}
-	if (x1 == x2) {
-		x1=0.;
-		x2=2.*x2+(x2==0.);
-	}
-	dx = (x2 - x1 ) / 9. ;
-	symsiz = para[13];
-	if (symsiz < 0.) symsiz=0.;
-	csp = symsiz*.5 * ( x2 - x1 )/ ( RASTERS * *xskl ) ;
-	x2 += csp ;
-	x1 -= csp ;
-	if(dx == 0 ) return(-1);
-	fint(x2,x2+dx,xma);
-	fint(-x1,dx-x1,xmi);
-	*xmi *= -1. ;
-	return(0);
-}
-
-grid(xmi,xma,xgo,xgi) 
-   float *xmi , *xma , *xgo , *xgi ;
-{
-	static float r[4] = { 1. ,2. , 5., 10.  } ;
-	double min = *xmi, max = *xma;
-	float  xgii , xgmag ,xg ;
-	short i ;
-
-	if( min == max ) return( -1 ) ;
-
-	/* Take care of reversed axes */
-	if( min > max ) {
-	    double temp = min;
-	    min = max;
-	    max = temp;
-	}
-
-	fint(min,max,xgo);
-	xgii = ( max - min ) / 3. ;
-	fmag(xgii,&xgmag ) ;
-	*xgi = xgmag ;
-	for(i = 0 ; i < 4 ; i++)
-	{
-		xg = xgmag*r[i] ;
-		if(xg > xgii ) break ;
-		*xgi = xg ;
-	}
-	while(*xgo >= min ) *xgo -= *xgi ;
-	*xgo += *xgi ;
-	return(0);
-}
-
-fint(x1,x2,xi)
-	float x1, x2, *xi ;
-{
-	float xag ;
-	fmag((float) (fabs((double) x1)+fabs((double) x2)), &xag);
-	*xi = -10.* xag ;
-	xag *= 10. ;
-l10:	while( *xi < x1 ) *xi += xag ;
-	if( *xi < x2 ) return(0);
-	*xi -= xag ;
-	xag *= .1 ;
-	goto l10 ;
-}
-
-fmag(x,xmag)
-	float x , *xmag ;
-{
-	float xa ;
-	if ( x == 0.) {
-		*xmag = 0. ;
-		return(0)  ;
-	    }
-	*xmag = 1. ;
-	xa = fabs((double) x);
-	while ( *xmag < xa ) *xmag *= 10. ;
-	while( *xmag > xa ) *xmag *=  .1  ;
-	return(0);
-}
-
-#define MAXVERT 200
-void
-plpoly(ix,iy,ik,ipsymb,shad)
-    int shad,ik;
-    short ix,iy;
-    int ipsymb;
-{
-    int np,skey,ic,symb;
-    short vert[MAXVERT+1][2];
-    short radius;
-    symb = ipsymb & 0x000f;
-    skey=(shad&0377)|((shad&0377)<<8);
-    if ((ipsymb>>4) & 0x0001) skey = 0;
-    np=3;
-    switch (symb) {			/* polygon types */
-	case 1:		/* upright triangle */
-	    vert[0][0]=ix-ik/2.;
-	    vert[0][1]=iy-ik/3.464;
-	    vert[1][0]=ix+ik/2.;
-	    vert[1][1]=iy-ik/3.464;
-	    vert[2][0]=ix;
-	    vert[2][1]=iy+ik/1.732;
-	    break;
-	case 2:		/* inverted triangle */
-	    vert[0][0]=ix-ik/2.;
-	    vert[0][1]=iy+ik/3.464;
-	    vert[1][0]=ix+ik/2.;
-	    vert[1][1]=iy+ik/3.464;
-	    vert[2][0]=ix;
-	    vert[2][1]=iy-ik/1.732;
-	    break;
-	case 3:		/* rightward triangle */
-	    vert[0][0]=ix-ik/3.464;
-	    vert[0][1]=iy+ik/2.;
-	    vert[1][0]=ix-ik/3.464;
-	    vert[1][1]=iy-ik/2.;
-	    vert[2][0]=ix+ik/1.732;
-	    vert[2][1]=iy;
-	    break;
-	case 4:		/* leftward triangle */
-	    vert[0][0]=ix+ik/3.464;
-	    vert[0][1]=iy+ik/2.;
-	    vert[1][0]=ix+ik/3.464;
-	    vert[1][1]=iy-ik/2.;
-	    vert[2][0]=ix-ik/1.732;
-	    vert[2][1]=iy;
-	    break;
-	case 5:		/* square */
-	    vert[0][0]=ix-ik/2.828;
-	    vert[0][1]=iy+ik/2.828;
-	    vert[1][0]=ix-ik/2.828;
-	    vert[1][1]=iy-ik/2.828;
-	    vert[2][0]=ix+ik/2.828;
-	    vert[2][1]=iy-ik/2.828;
-	    vert[3][0]=ix+ik/2.828;
-	    vert[3][1]=iy+ik/2.828;
-	    np=4;
-	    break;
-	case 6:		/* diamond */
-	    vert[0][0]=ix;
-	    vert[0][1]=iy+ik/1.7;
-	    vert[1][0]=ix-ik/2.5;
-	    vert[1][1]=iy;
-	    vert[2][0]=ix;
-	    vert[2][1]=iy-ik/1.7;
-	    vert[3][0]=ix+ik/2.5;
-	    vert[3][1]=iy;
-	    np=4;
-	    break;
-	case 7: 		/* hexagon */
-	    vert[0][0]=ix-ik/2.;
-	    vert[0][1]=iy;
-	    vert[1][0]=ix-ik/4.;
-	    vert[1][1]=iy-ik/2.309;
-	    vert[2][0]=ix+ik/4.;
-	    vert[2][1]=iy-ik/2.309;
-	    vert[3][0]=ix+ik/2.;
-	    vert[3][1]=iy;
-	    vert[4][0]=ix+ik/4.;
-	    vert[4][1]=iy+ik/2.309;
-	    vert[5][0]=ix-ik/4.;
-	    vert[5][1]=iy+ik/2.309;
-	    np=6;
-	    break;
-	case 9:		/* plus */
-	    { float s1=ik/2.828,
-		    s2=ik/2.828/10.0;
-	    vert[0][0]=ix-s2; vert[0][1]=iy-s1;
-	    vert[1][0]=ix+s2; vert[1][1]=iy-s1;
-	    vert[2][0]=ix+s2; vert[2][1]=iy-s2;
-	    vert[3][0]=ix+s1; vert[3][1]=iy-s2;
-	    vert[4][0]=ix+s1; vert[4][1]=iy+s2;
-	    vert[5][0]=ix+s2; vert[5][1]=iy+s2;
-	    vert[6][0]=ix+s2; vert[6][1]=iy+s1;
-	    vert[7][0]=ix-s2; vert[7][1]=iy+s1;
-	    vert[8][0]=ix-s2; vert[8][1]=iy+s2;
-	    vert[9][0]=ix-s1; vert[9][1]=iy+s2;
-	    vert[10][0]=ix-s1; vert[10][1]=iy-s2;
-	    vert[11][0]=ix-s2; vert[11][1]=iy-s2;
-	    vert[12][0]=ix-s2; vert[12][1]=iy-s1;
-	    np=13;
-	    break;
-	    }
-	case 10:	/* X/cross */
-	    { float s1=ik/2.828,
-		    s2=ik/2.828/10.0;
-	    vert[0][0]=ix;    vert[0][1]=iy-s2;
-	    vert[1][0]=ix+s1-s2; vert[1][1]=iy-s1;
-	    vert[2][0]=ix+s1; vert[2][1]=iy-s1+s2;
-	    vert[3][0]=ix+s2; vert[3][1]=iy;
-	    vert[4][0]=ix+s1; vert[4][1]=iy+s1-s2;
-	    vert[5][0]=ix+s1-s2; vert[5][1]=iy+s1;
-	    vert[6][0]=ix;    vert[6][1]=iy+s2;
-	    vert[7][0]=ix-s1+s2; vert[7][1]=iy+s1;
-	    vert[8][0]=ix-s1; vert[8][1]=iy+s1-s2;
-	    vert[9][0]=ix-s2; vert[9][1]=iy;
-	    vert[10][0]=ix-s1;vert[10][1]=iy-s1+s2;
-	    vert[11][0]=ix-s1+s2; vert[11][1]=iy-s1;
-	    vert[12][0]=ix;   vert[12][1]=iy-s2;
-	    np=13;
-	    break;
-	    }
-	case 8:		/* circle and unrecognized codes */
-	default:			/* filled circle */
-	    radius = ik/2;
-	    fputc('c', plotfile);
-	    vputh(skey, plotfile);	/* shading mask */
-	    vputh(ix, plotfile);	/* center */
-	    vputh(iy, plotfile);
-	    vputh(radius, plotfile);
-	    return;	/* This isn't done as a polygon, so leave */
-    }
-    fputc('a', plotfile);
-    vputh(skey, plotfile);
-    vputh(np, plotfile);
-    for(ic=0;ic < np;ic++) {
-	vputh(vert[ic][0], plotfile);
-	vputh(vert[ic][1], plotfile);
-    }
-    /* close polygon */
-    (void) vputh(vert[0][0], plotfile);
-    (void) vputh(vert[0][1], plotfile);
-}
-
-void
-draw(cc,ix,iy)
-	char cc ;
-	short ix,iy;
-{
-	fputc(cc, plotfile);
-	vputh(ix, plotfile);
-	vputh(iy, plotfile);
-}
-
-void
-form(x,str,l)
-	float x ;
-	int *l ;
-	char *str;
-{
-	sprintf(str,"%g",x);
-	*l = 0;
-	while(*(str++) ) (*l)++ ;
-	if (*(str-2) == '.' ) (*l)-- ;
-}
-
-adjust(str,l)
-	char *str ;
-	int l ;
-{
-	int jj = l<=0 ? 0 : strlen(str);
-        return(MIN(jj,l));
-}
-
-
-
-
 /* ---------------------------------------------------------------
  * Following subroutines added by John Werner 8/85
  * fortran-callable subroutines:
@@ -900,44 +983,8 @@ adjust(str,l)
  * and y in Nplot.  Nmove moves without drawing.
  */
 
-nline_(x,y,para)
-	float *x , *y , *para ;
-{
-	short ix, iy;
-
-	if (para[19] == 0.) {		/* See if plotfile is open */
-		fprintf(stderr,"Nline: plotfile not open\n");
-		return(-1);
-	}
-
-	fatcheck(para);
-
-	convert(x, y, &ix, &iy, para);
-	draw('d',ix,iy);
-	return(0);
-}
-
-nmove_(x,y,para)
-	float *x , *y , *para;
-{
-	short ix, iy;
-
-	if (para[19] == 0.) {		/* See if plotfile is open */
-		fprintf(stderr,"Nmove: plotfile not open\n");
-		return(-1);
-	}
-
-	fatcheck(para);
-
-	convert(x, y, &ix, &iy, para);
-	draw('m',ix,iy);
-	return(0);
-}
-
-void
-convert(x, y, ix, iy, para)	/* convert point to local coordinates */
-	float *x, *y, *para;
-	short *ix, *iy;
+void convert(float *x, float *y, short *ix, short *iy, float *para)
+/* convert point to local coordinates */
 {
 	double dx, dy;
 	short ix0 , iy0;
@@ -949,23 +996,39 @@ convert(x, y, ix, iy, para)	/* convert point to local coordinates */
 	*iy =  (*y - para[3])/dy  + iy0 ;
 }
 
-/* see if line thickness has changed */
-void
-fatcheck(para)
-	float *para;
+void nline_(float *x, float *y, float *para)
 {
-	char f = 'f';
-	if (fatsave != para[14]) {
-		fatsave = para[14];
-		fputc('f', plotfile);
-		vputh(fatsave, plotfile);
+	short ix, iy;
+
+	if (para[19] == 0.) {		/* See if plotfile is open */
+		fprintf(stderr,"Nline: plotfile not open\n");
+		return;
 	}
+
+	fatcheck(para);
+
+	convert(x, y, &ix, &iy, para);
+	draw('d',ix,iy);
+	return;
 }
 
-nlabel_(x,y,xst,para,lxst)
-	float *x , *y , *para ;
-	char *xst ;
-	int lxst ;
+void nmove_(float *x, float *y, float *para)
+{
+	short ix, iy;
+
+	if (para[19] == 0.) {		/* See if plotfile is open */
+		fprintf(stderr,"Nmove: plotfile not open\n");
+		return;
+	}
+
+	fatcheck(para);
+
+	convert(x, y, &ix, &iy, para);
+	draw('m',ix,iy);
+	return;
+}
+
+int nlabel_(float *x,float *y, char *xst, float *para, int lxst)
 /* subroutine to place label string in xst at position
  x,y (inches) relative to lower left corner of plot produced
  by subroutine nplot. It assumes nplot has been called already
@@ -983,8 +1046,6 @@ nlabel_(x,y,xst,para,lxst)
 	short  ix0 , iy0 , ix , iy  ;
 	float px,py;
 	enum orient rotation;
-	void settxtinfo(),
-	     pltext();
 
 	px = *x;
 	py = *y;
@@ -1013,10 +1074,7 @@ nlabel_(x,y,xst,para,lxst)
 	return(0) ;
 }
 
-plabel_(x,y,xst,para,lxst)
-	float *x , *y , *para ;
-	char *xst ;
-	int lxst;
+int plabel_(float *x, float *y, char *xst, float *para, int lxst)
 /* subroutine to place label string in xst at position
    x,y in plot window coordinates being used by subroutine nplot. 
    It assumes nplot has been called already and uses the same 
@@ -1030,8 +1088,6 @@ plabel_(x,y,xst,para,lxst)
 	float px,py;
 	double dx, dy;
 	enum orient rotation;
-	void settxtinfo(),
-	     pltext();
 
 	px = *x;
 	py = *y;
@@ -1072,107 +1128,3 @@ struct textword {
 				   3 - vertical and to right */
       size        :5;		/* Font size */
    };
-#define MAX_FONT_CODE	255
-#define MAX_FONT_SIZE	31
-
-void
-pltext(ix,iy,info,text,nl)
-	int nl;
-	short ix,iy;
-	char *text;
-	struct txtinfo *info;
-{
-	int item;
-	/*
-	union {
-	   struct textword tword;
-	   long int text_word;
-	} item;
-	*/
-
-	/* Copy font information from text structure into the
-	   word in preparation for writing out. */
-	/*
-	item.tword.font_code = (unsigned) info->font;
-	item.tword.orientation = (unsigned) info->orientation;
-	item.tword.size = (unsigned) info->size;
-	*/
-	item = (info->size & 0x001f)
-	   | (((int)info->orientation << 5) & 0x0060)
-	   | ((info->font << 8) & 0xff00);
-
-	/* Move to origin of text and put the text there */
-	(void) draw('m',ix,iy);
-	(void) fputc('t', plotfile);
-	(void) vputw(item, plotfile);
-	(void) fwrite(text, nl, 1, plotfile);
-	(void) fputc('\0', plotfile);
-}
-
-void
-gettxtinfo(where, what, to_what)
-   struct txtinfo *where;
-   enum sticode what;
-   union {
-      int integer;
-      struct txtinfo structure;
-   } *to_what;
-
-/* Get the item in the text descriptor described by 'what' and return
-   it to the thing pointed to by to_what.
-*/
-{
-   struct fontdescr *fd;
-
-   switch (what) {
-      case tfont:
-	 to_what->integer = (int) where->font; break;
-      case tsize:
-	 to_what->integer = (int) where->size; break;
-      case torient:
-	 to_what->integer = (int) where->orientation; break;
-      case tcopy:
-	 to_what->structure = *where; break;
-      case theight:
-	 fd = getfont(where->font);
-	 if (fd == NULL) {
-	    fprintf(stderr, 
-	       "NPLOT: Couldn't get width for font %d, using default.\n",
-	       where->font);
-	    fd = getfont(0);
-	 }
-	 to_what->integer = fd->fd_height;
-	 break;
-      default:
-	 fprintf(stderr,
-	    "NPLOT: Internal error - gettxtinfo called with invalid code\n");
-	 exit(1);
-   }
-}
-
-void
-settxtinfo(where, what, to_what)
-   struct txtinfo *where;
-   enum sticode what;
-   int to_what;
-
-/* Set the item in the text descriptor described by 'what' to the
-   value given by to_what.
-*/
-{
-   switch (what) {
-      case tfont:
-	 where->font = to_what <= MAX_FONT_CODE ? to_what : 0;
-	 break;
-      case tsize:
-	 where->size = to_what <= MAX_FONT_SIZE ? to_what : 0;
-	 break;
-      case torient:
-	 where->orientation = (enum orient) to_what;
-	 break;
-      default:
-	 fprintf(stderr,
-	    "NPLOT: Internal error - settxtinfo called with invalid code\n");
-	 exit(1);
-   }
-}

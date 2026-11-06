@@ -11,11 +11,52 @@
 
 extern int tflag;
 
+void mov(short hadd, short vadd, short orient)
+{
+   switch(orient) {
+      case 0:
+	 xold += hadd; yold += vadd; break;
+      case 1:
+	 xold -= vadd; yold += hadd; break;
+      case 2:
+	 xold -= hadd; yold -= vadd; break;
+      case 3:
+	 xold += vadd; yold -= hadd; break;
+   }
+}
+
+void recalculate_sizes(struct fontdescr *fp, short size, short *h, short *v)
+/* Recalculate the horizontal and vertical move values. */
+{
+   struct character *fc_blank;
+   
+   fc_blank = fp->fd_char[(int)' '];
+   *h  = (fc_blank->rwidth - fc_blank->lwidth)*fp->fd_scale*size*xscale;
+   *v = fp->fd_height*size*yscale;
+}
+
 void
-pstr(str,orient,size)
-   char *str;
-   int orient;
-   short size;
+oadd(int orient, float size, int *xp, int *yp, int xval, int yval)
+/* Do an oriented add of (x,y) pair to the absolute (x,y) of the plot */
+{
+#define HFUDGE 1.15
+   float xv, yv;
+
+   xv = xval*xscale*size*HFUDGE; yv = yval*yscale*size;
+   switch(orient) {
+      case 0:
+         (*xp) += xv; (*yp) += yv; break;
+      case 1:
+	 (*xp) -= yv; (*yp) += xv; break;
+      case 2:
+	 (*xp) -= xv; (*yp) -= yv; break;
+      case 3:
+	 (*xp) += yv; (*yp) -= xv; break;
+   }
+}
+
+void
+pstr(char *str, int orient, short size)
 /* Emit the string passed as 'str' as an X string, and then zero
    it.  If the string is null, skip everything. */
 {
@@ -51,14 +92,11 @@ pstr(str,orient,size)
    }
 }
 
-putsym()
+void putsym()
 /*
  * interpret characters into vectors
  */
 {
-    void oadd(),
-       mov(),
-       recalculate_sizes();
     short size,move,moveh,movev,vmove,key;
     int sym, font, fontsize, fontindex,
 	line_space, interletter_spacing,
@@ -290,58 +328,4 @@ cleanup:
     /* Reset the fatbase if needed */
     if (fatsave != curfat)
 	setfat(fatsave);
-}
-
-void
-mov(hadd,vadd,orient)
-short hadd,vadd,orient;
-{
-   switch(orient) {
-      case 0:
-	 xold += hadd; yold += vadd; break;
-      case 1:
-	 xold -= vadd; yold += hadd; break;
-      case 2:
-	 xold -= hadd; yold -= vadd; break;
-      case 3:
-	 xold += vadd; yold -= hadd; break;
-   }
-}
-
-void
-recalculate_sizes(fp, size, h, v)
-   struct fontdescr *fp;
-   short size;
-   short *h, *v;
-/* Recalculate the horizontal and vertical move values. */
-{
-   struct character *fc_blank;
-   
-   fc_blank = fp->fd_char[(int)' '];
-   *h  = (fc_blank->rwidth - fc_blank->lwidth)*fp->fd_scale*size*xscale;
-   *v = fp->fd_height*size*yscale;
-}
-
-void
-oadd(orient, size, xp, yp, xval, yval)
-   int orient,
-      *xp, *yp,
-      xval, yval;
-   float size;
-/* Do an oriented add of (x,y) pair to the absolute (x,y) of the plot */
-{
-#define HFUDGE 1.15
-   float xv, yv;
-
-   xv = xval*xscale*size*HFUDGE; yv = yval*yscale*size;
-   switch(orient) {
-      case 0:
-         (*xp) += xv; (*yp) += yv; break;
-      case 1:
-	 (*xp) -= yv; (*yp) += xv; break;
-      case 2:
-	 (*xp) -= xv; (*yp) -= yv; break;
-      case 3:
-	 (*xp) += yv; (*yp) -= xv; break;
-   }
 }

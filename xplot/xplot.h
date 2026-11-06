@@ -41,8 +41,19 @@ extern int plotted, needmove;
 extern int xold, yold, xnew, ynew;
 
 void dump(int, int, int, int);
-void line(), setfat(), init_color(), color(), drawpath(), clipreg(),
-    closepl(), error(), erase();
+void line(), setfat(int), init_color(), color(), drawpath(), clipreg(),
+    area(), dopat(), circshad(), closepl(), error(char*), erase(), putsym();
+void putpoint(int, int);
+int setshad(int);
+int getstring(FILE *);
+int vgeth(FILE *);
+int vgetw(FILE *);
+int clip(int*, int*, int*, int*);
+int setpathop(int);
+int is_scale(char *);
+void Quit(Widget, XEvent *, String *, Cardinal *);
+void Next(Widget, XEvent *, String *, Cardinal *);
+void doplot(void *, int *, unsigned long *);
 
 #define DRAW_PATH		1
 #define FILL_PATH		2

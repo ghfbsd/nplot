@@ -11,9 +11,7 @@
  */
 
 /*LINTLIBRARY*/
-nshad_(pn,x,y,spass,para)
-	int *pn , *spass ;
-	float *x , *y , *para ;
+void nshad_(int *pn, float *x, float *y, int *spass, float *para)
 {
 	float xplt,yplt;
 	short xclos,yclos;
@@ -27,13 +25,13 @@ nshad_(pn,x,y,spass,para)
 	n = (int)(*pn);
 	if(n < 0) {
 		fprintf(stderr,"NSHAD: error, negative point count\n");
-		return(-1);
+		return;
 	}
-	if (n==0) return(0);
+	if (n==0) return;
 
 	if(para[11]*para[19] == 0. ) {
 		fprintf(stderr,"NSHAD: error, nplot has not been called\n");
-		return(-1);
+		return;
 	}
 
 	dx = (para[4]-para[2])/(RASTERS *para[0]) ;
@@ -62,5 +60,5 @@ nshad_(pn,x,y,spass,para)
 	/* close polygon */
 	vputh(xclos, plotfile);
 	vputh(yclos, plotfile);
-	return(0);
+	return;
 }

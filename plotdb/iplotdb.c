@@ -27,11 +27,53 @@ void
     doproc(void), procras(void), procarea(void), procline(void),
     procapat(void), proccirc(void), procsym(void), putword(int), textend(void);
 
-main(argc, argv)
-    int argc;
-    char **argv;
+void vputh(int, FILE *);
+void vputw(int, FILE *);
+
+void putword(int w)
 {
-    FILE *freopen();
+    vputh(w, stdout);
+    return;
+}
+
+int getlin(char *s, int max)
+{
+    int i;
+    int c;
+
+    i = 0;
+    while ((--max) && ((c = getc(pltin)) != EOF) && (c != '\n'))
+	s[i++] = c;
+    if (c == '\n')
+	s[i++] = c;
+    s[i] = '\0';
+    if (feof(pltin))
+	i = EOF;
+    return (i);
+}
+
+int egetlin(char *s, int m)
+{
+    register int i;
+
+    if ((i = getlin(s, m)) == EOF) {
+	fprintf(stderr, "iplotdb:  premature EOF: %s\n", cptr);
+	exit(1);
+    }
+    return (i);
+}
+
+void textend()
+{
+    register int e;
+
+    getlin(line, MAXLINE);
+    e = strcmp(line, TEXTEND);
+    ck(e, TENDERR);
+}
+
+int main(int argc, char **argv)
+{
 
     pltin = stdin;
 
@@ -56,8 +98,7 @@ main(argc, argv)
     exit(1);	/* fixed empty argument 2021-08-28 crb */
 }
 
-void
-doproc()
+void doproc()
 {
     register int e;
     int x, y, xmax, ymax, fat, r, g, b;
@@ -152,8 +193,7 @@ doproc()
     }
 }
 
-void
-procarea()
+void procarea()
 {
     int x, y;
     int npts, shade, xmask, ymask;
@@ -176,8 +216,7 @@ procarea()
     }
 }
 
-void
-procline()
+void procline()
 {
     int x, y;
     int npts, shade, xmask, ymask;
@@ -196,8 +235,7 @@ procline()
     }
 }
 
-void
-procapat()
+void procapat()
 {
     int x, y;
     int npts, pattern;
@@ -217,8 +255,7 @@ procapat()
     }
 }
 
-void
-proccirc()
+void proccirc()
 {
     int x, y, rad, xmask, ymask, shade, e;
 
@@ -234,8 +271,7 @@ proccirc()
     putword(rad);
 }
 
-void
-procsym()
+void procsym()
 {
     register int e;
     int size, orient, key, temp, font;
@@ -306,8 +342,7 @@ procsym()
     }
 }
 
-void
-procras()
+void procras()
 {
     register int e;
     int w, count, offset;
@@ -333,55 +368,4 @@ procras()
 	    putword(w);
 	}
     }
-}
-
-void
-putword(w)
-    int w;
-{
-    vputh(w, stdout);
-    return;
-}
-
-getlin(s, max)
-    char s[];
-int max;
-
-{
-    int i;
-    int c;
-
-    i = 0;
-    while ((--max) && ((c = getc(pltin)) != EOF) && (c != '\n'))
-	s[i++] = c;
-    if (c == '\n')
-	s[i++] = c;
-    s[i] = '\0';
-    if (feof(pltin))
-	i = EOF;
-    return (i);
-}
-
-egetlin(s, m)
-    char s[];
-int m;
-
-{
-    register int i;
-
-    if ((i = getlin(s, m)) == EOF) {
-	fprintf(stderr, "iplotdb:  premature EOF: %s\n", cptr);
-	exit(1);
-    }
-    return (i);
-}
-
-void
-textend()
-{
-    register int e;
-
-    getlin(line, MAXLINE);
-    e = strcmp(line, TEXTEND);
-    ck(e, TENDERR);
 }

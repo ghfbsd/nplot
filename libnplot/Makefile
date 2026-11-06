@@ -9,9 +9,9 @@
 # Use code optimizers
 FC = gfortran
 FFLAGS = -O -m32
-FFLAGS = -g -finit-local-zero
+FFLAGS = -g -finit-local-zero -std=legacy
 CFLAGS = -O
-CFLAGS = -g -Wno-implicit
+CFLAGS = -g -Wno-implicit -std=c23
 
 OBJS=	nplot.o const.o geth.o getw.o nshad.o npat.o ncolor.o puth.o putw.o font.o
 LIB=	libnplot
@@ -25,7 +25,7 @@ FONTFILE= ${DEST}/nplotfont
 LIB32= ${LIB}-32.a
 LIB64= ${LIB}-64.a
 
-libs: ${LIB32} ${LIB64}
+libs: ${LIB64}
 
 lib ${LIB}: ${OBJS}
 	ar rv ${LIB} ${OBJS}

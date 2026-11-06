@@ -9,9 +9,7 @@ float ox = 0.0, oy = 0.0, sa = 1.0, sb = 0.0, sc = 0.0, sd = 1.0;
 int plotmode=3;		/* default to `shade over' mode */
 
 void
-pusht(state)
-   float state[6];
-{
+pusht(float state[6]){
    state[0] = ox;
    state[1] = oy;
    state[2] = sa;
@@ -21,9 +19,7 @@ pusht(state)
 }
 
 void
-popt(state)
-   float state[6];
-{
+popt(float state[6]){
    ox = state[0];
    oy = state[1];
    sa = state[2];
@@ -34,9 +30,7 @@ popt(state)
 
 /* Coordinate rotation - angle in degrees */
 void
-rot(theta)
-   float theta;
-{
+rot(float theta){
    float nsa, nsb, nsc, nsd;
    double rho = theta*4.0*atan(1.0)/180.0;
    nsa = cos(rho)*sa + sin(rho)*sc;
@@ -49,9 +43,7 @@ rot(theta)
 
 /* Coordinate translation  */
 void
-tran(x,y)
-   float x,y;
-{
+tran(float x, float y){
    float nox, noy;
    nox = x*sa + y*sc + ox;
    noy = x*sb + y*sd + oy;
@@ -61,9 +53,7 @@ tran(x,y)
 
 /* Coordinate scaling  */
 void
-scal(x,y)
-   float x,y;
-{
+scal(float x,float y){
    float nsa, nsb, nsc, nsd;
    nsa = x*sa;
    nsb = x*sb;
@@ -75,9 +65,7 @@ scal(x,y)
 
 /* Calculate bounding box, accounting for coordiate transformations */
 void
-bbox(x,y)
-    int x, y;
-{
+bbox(int x,int y){
     int lx = (int)(ox + sa*x + sc*y);
     int ly = (int)(oy + sb*x + sd*y);
     if (llfst) {
@@ -96,9 +84,7 @@ bbox(x,y)
 /*  putpoint
  *  Add a point to the current path, drawing it if it gets too big.
  */
-void putpoint(x, y)
-	int x, y;
-{
+void putpoint(int x, int y){
     if (pathlen == MAXPATHLEN) {
 	/*
 	 * We've got as many points stored as we can,
@@ -149,9 +135,7 @@ void drawpath()
  * Set the current path operation (e.g. DRAW or FILL).
  * Return the old operation.
  */
-int setpathop(newop)
-    int newop;
-{
+int setpathop(int newop){
     int saveop = pathop;
     if (newop != pathop) {
 	drawpath();

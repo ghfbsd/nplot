@@ -5,10 +5,10 @@
 
 extern int vertical, embedded, pageno;
 
-void initpage(footer,fatbase)
-   struct foot_info *footer;
-   int fatbase;
-{
+void initpage(
+   struct foot_info *footer,
+   int fatbase
+){
    pageno += 1;
    printf ("%%%%Page: %d %d\n",pageno,pageno);
    puts("AD begin");	/* Set up local dictionary */

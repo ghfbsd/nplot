@@ -1,6 +1,7 @@
 #include	<stdio.h>
 #include	<ctype.h>
 #include	<strings.h>
+#include        <unistd.h>
 #include	"xplot.h"
 
 #define LINE 512
@@ -11,37 +12,36 @@ char *curp;
 int len = 0;
 int endinp;
 
-void Quit(w,event,params,nparams)
-   Widget w;
-   XEvent *event;
-   String *params;
-   Cardinal *nparams;
+/* Have to do my own buffering: */
+#ifdef SGI
+#include <limits.h>
+#define WAITINTERVAL CLK_TCK/2
+#else
+#define WAITINTERVAL 50000
+#endif
+
+int readit(FILE *strm)
 {
-	closepl();
-	exit(0);
+	int lenp;
+
+	endinp = 0;
+	if (len > 0)
+		bcopy(curp, cptr, len);
+	if ((lenp = fread(cptr+len, 1, LINE - len, strm)) == 0){
+#ifdef SGI
+		sginap(WAITINTERVAL); /* Wait in case stuff is on the way */
+#else
+		usleep(WAITINTERVAL); /* Wait in case stuff is on the way */
+#endif
+		if ((lenp = fread(cptr+len, 1, LINE - len, strm)) == 0)
+			endinp = 1;
+	}
+	len += lenp;
+	curp = cptr;
+	return len>0;
 }
 
-void Next(w,event,params,nparams)
-   Widget w;
-   XEvent *event;
-   String *params;
-   Cardinal *nparams;
-/* Erase screen, reinstate interest in input events, and continue with plot */
-{
-	void doplot();
-	XtInputMask mask;
-
-	if (len==0 && endinp) Quit(NULL,NULL,NULL,NULL);
-	erase();
-	inid = XtAddInput(fileno(instrm),
-			  (XtPointer)XtInputReadMask, doplot, NULL);
-	if (!((mask=XtPending()) & XtInputReadMask)) doplot();
-}
-
-void doplot(client_data,fds,id)
-   caddr_t client_data;
-   int *fds; /* None of these arguments are actually used... */
-   int *id;
+void doplot(void *, int *, unsigned long *)
 /* Called implicitly by X event scheduler when input from the plot file
    is available.  This runs until no input is available (EWOULDBLOCK) bit
    some may show up later, or until proper end-of-file.  If a multiple-plot
@@ -137,28 +137,7 @@ void doplot(client_data,fds,id)
    } 
 }
 
-int vgeth(strm)
-/* Return next halfword from stream which is encoded in VAX byte order */
-   FILE *strm;
-{
-   short x;
-   (void) getcoords(&x,1,strm);
-   return x;
-}
-
-int vgetw(strm)
-/* Return next word from stream which is encoded in VAX byte order */
-   FILE *strm;
-{
-   short x[2];
-   (void) getcoords(x,2,strm);
-   return (x[1]<<16) | x[0];
-}
-
-int getcoords(x,n,strm)
-short *x;
-int n;
-FILE *strm;
+int getcoords(short *x, int n, FILE *strm)
 {
 	unsigned char c,d;
 	int i;
@@ -182,8 +161,7 @@ FILE *strm;
 	return 1;
 }
 
-int getstring(strm)
-   FILE *strm;
+int getstring(FILE *strm)
 {
 	char c;
 	int lenp;
@@ -196,32 +174,36 @@ int getstring(strm)
 	return c;
 }
 
-/* Have to do my own buffering: */
-#ifdef SGI
-#include <limits.h>
-#define WAITINTERVAL CLK_TCK/2
-#else
-#define WAITINTERVAL 50000
-#endif
-
-int readit(strm)
-FILE *strm;
+int vgeth(FILE *strm)
+/* Return next halfword from stream which is encoded in VAX byte order */
 {
-	int lenp;
+   short x;
+   (void) getcoords(&x,1,strm);
+   return x;
+}
 
-	endinp = 0;
-	if (len > 0)
-		bcopy(curp, cptr, len);
-	if ((lenp = fread(cptr+len, 1, LINE - len, strm)) == 0){
-#ifdef SGI
-		sginap(WAITINTERVAL); /* Wait in case stuff is on the way */
-#else
-		usleep(WAITINTERVAL); /* Wait in case stuff is on the way */
-#endif
-		if ((lenp = fread(cptr+len, 1, LINE - len, strm)) == 0)
-			endinp = 1;
-	}
-	len += lenp;
-	curp = cptr;
-	return len>0;
+int vgetw(FILE *strm)
+/* Return next word from stream which is encoded in VAX byte order */
+{
+   short x[2];
+   (void) getcoords(x,2,strm);
+   return (x[1]<<16) | x[0];
+}
+
+void Quit(Widget w, XEvent *event, String *params, Cardinal *nparams)
+{
+	closepl();
+	exit(0);
+}
+
+void Next(Widget w, XEvent *event, String *params, Cardinal *nparams)
+/* Erase screen, reinstate interest in input events, and continue with plot */
+{
+	XtInputMask mask;
+
+	if (len==0 && endinp) Quit(NULL,NULL,NULL,NULL);
+	erase();
+	inid = XtAddInput(fileno(instrm),
+			  (XtPointer)XtInputReadMask, doplot, NULL);
+	if (!((mask=XtPending()) & XtInputReadMask)) doplot(NULL, NULL, NULL);
 }

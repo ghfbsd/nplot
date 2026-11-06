@@ -14,13 +14,8 @@
  * are the same size
  */
 
-sputw(w, iop)
-    int w;
-    register FILE *iop;
+int sputw(int w, FILE *iop)
 {
-    register char *p;
-    register int i;
-
     putc((unsigned char)((w >> 24) & 0xFF), iop);
     putc((unsigned char)((w >> 16) & 0xFF), iop);
     putc((unsigned char)((w >> 8) & 0xFF), iop);
@@ -28,9 +23,7 @@ sputw(w, iop)
     return(ferror(iop));
 }
 
-vputw(w, iop)
-    int w;
-    register FILE *iop;
+int vputw(int w, FILE *iop)
 {
     putc((unsigned char)(w & 0xFF), iop);
     putc((unsigned char)((w >> 8) & 0xFF), iop);

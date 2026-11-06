@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "apen.h"
-short vgeth();
 
 void line()	/* draw a line */
 {

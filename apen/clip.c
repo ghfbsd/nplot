@@ -5,9 +5,31 @@ extern int xmin, ymin, xmax, ymax;
 
 #define code(x,y) (x<xmin?1:(x>xmax?2:0))|(y<ymin?4:(y>ymax?8:0))
 
-int clip(x1,y1,x2,y2)	/* window the plot */
-int *x1,*y1,*x2,*y2;
-   {
+
+int solve(int pnot,int p1,int q1,int p2,int q2){/* solve linear eqn in integers */
+    register int pmid,qmid;
+    if(p1>p2) {
+	pmid=p1;p1=p2;p2=pmid;
+	qmid=q1;q1=q2;q2=qmid;
+    }
+    if(pnot<=p1) return(q1);
+    if(pnot>=p2) return(q2);
+    while(1) {  /* iterate until convergence */
+	pmid= (p1+p2)>>1;
+	qmid= (q1+q2)>>1;
+	if(pmid<pnot) {
+	    p1=pmid;
+	    q1=qmid;
+	} else if(pmid>pnot) {
+	    p2=pmid;
+	    q2=qmid;
+	} else
+	    return(qmid);
+    }
+}
+
+
+int clip(int *x1,int *y1,int *x2,int *y2){	/* window the plot */
 	register int c1,c2,temp;
 	int swap;
 	c1=code(*x1,*y1);
@@ -40,29 +62,3 @@ int *x1,*y1,*x2,*y2;
 	}
 	return(0);
    }
-
-
-int solve(pnot,p1,q1,p2,q2) /* solve linear eqn in integers */
-    int pnot,p1,q1,p2,q2;
-{
-    register int pmid,qmid;
-    if(p1>p2) {
-	pmid=p1;p1=p2;p2=pmid;
-	qmid=q1;q1=q2;q2=qmid;
-    }
-    if(pnot<=p1) return(q1);
-    if(pnot>=p2) return(q2);
-    while(1) {  /* iterate until convergence */
-	pmid= (p1+p2)>>1;
-	qmid= (q1+q2)>>1;
-	if(pmid<pnot) {
-	    p1=pmid;
-	    q1=qmid;
-	} else if(pmid>pnot) {
-	    p2=pmid;
-	    q2=qmid;
-	} else
-	    return(qmid);
-    }
-}
-

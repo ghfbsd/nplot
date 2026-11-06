@@ -33,14 +33,12 @@ colrec colors[NUMCOL] = {
     { 110, 110, 110 },	/* Dark Gray	*/
 };
 
-ncolor_(col, para)
-    int *col;
-    float *para;
+void ncolor_(int *col, float *para)
 {
     
 	if(para[11]*para[19] == 0. ) {
 	    fprintf(stderr, "NCOLOR: error, nplot has not been called\n");
-	    return(-1);
+	    return;
 	}
 
 
@@ -51,18 +49,16 @@ ncolor_(col, para)
 	putc(colors[*col].r, plotfile);
 	putc(colors[*col].g, plotfile);
 	putc(colors[*col].b, plotfile);
-	return(0);
+	return;
 }
 
-nrgb_(red, green, blue, para)
-    int *red, *green, *blue;
-    float *para;
+void nrgb_(int *red, int *green, int *blue, float *para)
 {
     int r, g, b;
 
     if(para[11]*para[19] == 0. ) {
 	fprintf(stderr, "NRGB: error, nplot has not been called\n");
-	return(-1);
+	return;
     }
 
     r = *red; g = *green; b = *blue;
@@ -86,5 +82,5 @@ nrgb_(red, green, blue, para)
     putc(r, plotfile);
     putc(g, plotfile);
     putc(b, plotfile);
-    return(0);
+    return;
 }

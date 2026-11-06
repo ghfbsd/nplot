@@ -1,14 +1,11 @@
 #include <stdio.h>
 #include "apen.h"
 #include "pat.h"
-short vgeth();
 
 extern float xscale, yscale;
 extern char *progname; 
 
-void area(color)
-    int color;
-{
+void area(int color){
     int xfirst, yfirst, x1, y1;
     int npts, shade, saveop;
     register int i;

@@ -78,12 +78,10 @@ int noshades = 1;
 
 XImage *simage;
 
-setshad(shade)
-    int shade;
+int setshad(int shade)
 {
     register int j, i;
     int xmask, ymask, index, op;
-    double sqrt();
 
     xmask = shade & 0377;
     ymask = (shade >> 8) & 0377;

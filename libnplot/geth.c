@@ -10,8 +10,7 @@
  * the way the VAX stores it: low byte, high byte
  */
 
-short vgeth(iop)
-    register FILE *iop;
+short vgeth(register FILE *iop)
 {
     short w;
 
@@ -23,8 +22,7 @@ short vgeth(iop)
     return(w);
 }
 
-short sgeth(iop)
-    register FILE *iop;
+short sgeth(register FILE *iop)
 {
     short w;
 

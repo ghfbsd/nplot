@@ -18,6 +18,7 @@
 	    10/10 - Alternate data directory for PostScript preamble and
 	           nplot font info.
             10/20 - Expand bounding box by +1 point so all lines included.
+            11/26 - Recode to C23 standard.
 */
 #include <stdlib.h>
 #include <unistd.h>
@@ -34,11 +35,9 @@ extern int forcegray;
 extern char *progname, *lib;
 
 char *progname, *lib;
-void lprfork();
+void lprfork(char *);
 
-int main(argc,argv)
-    int argc; char **argv;
-{
+int main(int argc, char **argv){
     register char *cptr;
     int standard_out=0, 
        triedplot=0, 
@@ -46,7 +45,6 @@ int main(argc,argv)
        copies=0;
     int epsfd;
     char *lpdev, *evar;
-    char *getenv();
     struct foot_info footer;
 
     lib = LIB;
@@ -237,9 +235,7 @@ int main(argc,argv)
 }
 
 
-void error(s)
-register char *s;
-{
+void error(register char *s){
    (void) fflush(stdout);
    fprintf(stderr,"%s\n",s);
    exit(1);
@@ -249,9 +245,7 @@ register char *s;
  * Copy a file into our output stream.  Useful for files that define
  * PostScript procedures and such things.
  */
-void dumpfile(s)
-char *s;
-{
+void dumpfile(char *s){
     register FILE *f;
     register int c, d;
 
@@ -279,9 +273,7 @@ char *s;
 
 int	pipe_des[2];		/* pipe_des[0] is the pipe output,
 				   pipe_des[1] is the input */
-void lprfork(pname)
-   char *pname;
-{
+void lprfork(char *pname){
 	int child;
 
 	/* Open pipe to lpr	 */

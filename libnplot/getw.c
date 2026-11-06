@@ -10,8 +10,7 @@
  * the way the SUN stores it: high byte, next byte, next byte, low byte
  */
 
-short vgetw(iop)
-    register FILE *iop;
+short vgetw(register FILE *iop)
 {
     short w;
 
@@ -25,8 +24,7 @@ short vgetw(iop)
     return(w);
 }
 
-short sgetw(iop)
-    register FILE *iop;
+short sgetw(register FILE *iop)
 {
     short w;
 

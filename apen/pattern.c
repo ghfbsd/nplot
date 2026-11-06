@@ -60,18 +60,12 @@ extern float xscale, yscale;
 extern char *progname;
 static int patinit=0;
 
-short vgeth();
-
-double greycolor(color)
-   int color;
+double greycolor(int color){
 /* greycolor -- Convert from a color index into a grey level. */
-{
     return pats[color];
 }
 
-void dopat(color)
-   int color;
-{
+void dopat(int color){
 
     int xfirst, yfirst;
     int x1, y1;

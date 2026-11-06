@@ -3,17 +3,13 @@
 
 /* set the line thickness to newfat */
 
-void
-faterr(bad, good)
-    int bad, good;
+void faterr(int bad, int good)
 {
     fprintf(stderr, 
        "%s: line thickness of %d out of range; set to %d\n", progname, bad, good);
 }
 
-void
-setfat(newfat)
-    int newfat;
+void setfat(int newfat)
 {
     if (newfat < 0) {
 	faterr(newfat, 0);

@@ -27,9 +27,7 @@ void init_color()
     lastcolor = -1;
 }
 
-int color(r,g,b)
-    unsigned char r,g,b;
-{
+int color(unsigned char r,unsigned char g,unsigned char b){
     register int i;
     int thiscolor, diff, mindiff, fakecolor;
 

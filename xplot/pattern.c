@@ -57,7 +57,7 @@ XImage *pimage;
 static int patinit=1;
 extern int fakecolor;
 
-dopat()
+void dopat()
 {
 
     int xfirst, yfirst;

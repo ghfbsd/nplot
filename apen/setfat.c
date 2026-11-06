@@ -1,19 +1,16 @@
 #include <stdio.h>
+#include "apen.h"
 
 extern int curfat, needmove;
 
 /* set the line thickness to newfat */
 
-void faterr(bad, good)
-    int bad, good;
-{
+void faterr(int bad, int good){
     fprintf(stderr, "apen: line thickness of %d out of range; set to %d\n",
 	bad, good);
 }
 
-void setfat(newfat)
-    int newfat;
-{
+void setfat(int newfat){
     if (newfat < 0) {
 	faterr(newfat, 0);
 	newfat = 0;

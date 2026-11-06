@@ -6,8 +6,7 @@
  * the way the VAX stores it: low byte, high byte
  */
 
-int vgeth(iop)
-    register FILE *iop;
+int vgeth(FILE *iop)
 {
     short w;
 
@@ -25,8 +24,7 @@ int vgeth(iop)
  * the way the VAX stores it: low byte, next byte, next byte, high byte
  */
 
-int vgetw(iop)
-    register FILE *iop;
+int vgetw(FILE *iop)
 {
     short w;
 

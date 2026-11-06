@@ -3,7 +3,7 @@
 DEST=		/usr/local/bin
 LIB=		/usr/local/lib
 MANDEST=	/usr/man/manl
-CFLAGS=		-g
+CFLAGS=		-g -std=c23
 OWNER=		bin
 GROUP=		staff
 

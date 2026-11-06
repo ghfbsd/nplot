@@ -1,12 +1,12 @@
 #include	<stdio.h>
+#include	<stdlib.h>
 #include	<ctype.h>
 
 extern float xscale, yscale, xdscale, ydscale;
 
-is_scale(cptr)
-	char *cptr;
+int is_scale(char *cptr)
 {
-	double scale, atof();
+	double scale;
 	register char *s=cptr;
 	int xflag=0, yflag=0;
 	if(*s == '-') s++;

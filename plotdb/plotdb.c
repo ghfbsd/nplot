@@ -16,13 +16,11 @@ static void
 FILE *pltin, *temp;
 char *cptr;
 
-int fgetc(), getw();
+int vgeth(FILE *);
+int vgetw(FILE *);
 
-main(argc, argv)
-    int argc;
-    char **argv;
+int main(int argc, char **argv)
 {
-    FILE *freopen();
     int filenam = 0;
 
     pltin = stdin;
@@ -316,10 +314,7 @@ getras()
     }
 }
 
-egetx(s, func)
-    FILE *s;
-    int (*func) ();
-
+int egetx(FILE *s, int (*func) (FILE *))
 {
     int r;
 
@@ -331,10 +326,7 @@ egetx(s, func)
     return (r);
 }
 
-edgetx(s, func)
-    FILE *s;
-    int (*func) ();
-
+int edgetx(FILE *s, int (*func) (FILE *))
 {
     int r;
 

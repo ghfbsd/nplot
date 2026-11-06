@@ -2,10 +2,9 @@
 #include	<ctype.h>
 #include	"xplot.h"
 
-is_scale(cptr)
-	char *cptr;
+int is_scale(char *cptr)
 {
-	double scale, atof();
+	double scale;
 	register char *s=cptr;
 	int xflag=0, yflag=0;
 	if(*s == '-') s++;

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "font.h"
+#include "apen.h"
 
 /* minor VAX changes to eliminate warnings, S. Stein, 6/85 */
 /* Implemented usage of hardware fonts, G. Helffrich 6/88 */
@@ -48,8 +49,7 @@ extern int curfat, xold, yold, xnew, ynew;
 extern float xscale, yscale;
 
 void
-pstr(str)
-   char *str;
+pstr(char *str)
 /* Emit the string passed as 'str' as a Postscript string, and then zero
    it.  If the string is null, skip everything. */
 {
@@ -62,14 +62,42 @@ pstr(str)
    }
 }
 
+void
+oadd(int orient, float size, int *xp, int *yp, int xval, int yval)
+/* Do an oriented add of (x,y) pair to the absolute (x,y) of the plot */
+{
+   float xv, yv;
+
+   xv = xval*xscale*size; yv = yval*yscale*size;
+   (*xp) += xv; (*yp) += yv;
+}
+
+void
+mov(short hadd, short vadd, short orient)
+{
+   xold += hadd; yold += vadd;
+}
+
+void
+recalculate_sizes(
+   struct fontdescr *fp,
+   short size,
+   short *h, short *v)
+/* Recalculate the horizontal and vertical move values. */
+{
+   struct character *fc_blank;
+   
+   fc_blank = fp->fd_char[(int)' '];
+   *h  = (fc_blank->rwidth - fc_blank->lwidth)*fp->fd_scale*size*xscale;
+   *v = fp->fd_height*size*yscale;
+}
+
+void
 putsym()
 /*
  * interpret characters into vectors
  */
 {
-    void oadd(),
-       mov(),
-       recalculate_sizes();
     short size,move,moveh,movev,vmove,add,drop,xp,yp,key;
     int sym, font, fontsize, fontindex,
 	line_space, interletter_spacing,
@@ -334,39 +362,4 @@ cleanup:
        puts("GR");
        popt(state);
     }
-}
-
-void
-mov(hadd,vadd,orient)
-short hadd,vadd,orient;
-{
-   xold += hadd; yold += vadd;
-}
-
-void
-recalculate_sizes(fp, size, h, v)
-   struct fontdescr *fp;
-   short size;
-   short *h, *v;
-/* Recalculate the horizontal and vertical move values. */
-{
-   struct character *fc_blank;
-   
-   fc_blank = fp->fd_char[(int)' '];
-   *h  = (fc_blank->rwidth - fc_blank->lwidth)*fp->fd_scale*size*xscale;
-   *v = fp->fd_height*size*yscale;
-}
-
-void
-oadd(orient, size, xp, yp, xval, yval)
-   int orient,
-      *xp, *yp,
-      xval, yval;
-   float size;
-/* Do an oriented add of (x,y) pair to the absolute (x,y) of the plot */
-{
-   float xv, yv;
-
-   xv = xval*xscale*size; yv = yval*yscale*size;
-   (*xp) += xv; (*yp) += yv;
 }

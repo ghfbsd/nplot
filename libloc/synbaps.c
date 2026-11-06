@@ -4,15 +4,14 @@
 /*
  * Read in a hunk of the SYNBAPS data
  */
-int synbaps_(array, xdarg, slona, flona, slata, flata)
-    register float *array;
-    register int *xdarg;
-    int *slata, *flata, *slona, *flona;
-{
+int synbaps_(
+   float *array, int *xdarg, int *slona, int *flona, int *slata, int *flata
+){
     register int xdim, j, y, i, x;
     int xstart, xend, ystart, yend;
     int slat, flat, slon, flon, err=0;
     FILE *bapf;
+    int sgeth(FILE *);
 
     xdim = *xdarg;
     slat = *slata;

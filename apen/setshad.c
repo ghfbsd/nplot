@@ -16,12 +16,10 @@ typedef struct {
 
 static int shadused=1, curshad=1;
 
-void setshad(color,shade)
-    int color,shade;
-{
+void setshad(int color, int shade){
     register int j, i;
     int xmask, ymask, shadnum;
-    double greylevel, greycolor();
+    double greylevel;
 
     xmask = shade & 0377;
     if (!xmask) {

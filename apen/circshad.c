@@ -9,11 +9,8 @@
 
 extern float xscale, yscale;
 extern int plotmode;
-short vgeth();
 
-void circshad(color)
-    int color;
-{
+void circshad(int color){
     int rad, x0, y0;
     int shade, shadnum, pathop;
 

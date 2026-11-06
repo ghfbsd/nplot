@@ -17,7 +17,7 @@ LDJUNK =
 LIBFILES= apen.setup apen.wrapup apen.pattern
 
 CFLAGS = -O
-CFLAGS = -g -Wno-implicit
+CFLAGS = -g -Wno-implicit -std=c23
 
 OBJ =	clip.o color.o doplot.o dump.o externs.o initpage.o\
 	is_scale.o io.o putras.o apen.o area.o putsym.o font.o\
@@ -124,6 +124,8 @@ pattern.o: pat.h
 pic.o: pic.h
 putras.o: apen.h
 putsym.o: font.h
+putsym.o: apen.h
+setfat.o: apen.h
 setshad.o: apen.h
 setshad.o: pat.h
 # DEPENDENCIES MUST END AT END OF FILE

@@ -12,15 +12,12 @@ int rwidth, rheight;
 /* This is supposed to set up the X window stuff, by creating a
    widget, in which the image is to be put in a background pixmap. */
 
-int main(argc,argv)
-int argc;
-char **argv;
+int main(int argc, char **argv)
 {
-	int i, dimset = 0, narg, ppi = 85, x, y, is_scale();
+	int i, dimset = 0, narg, ppi = 85, x, y;
 	char *ptr, *file = NULL;
 	Widget child;
 	Arg wargs[20];
-	void doplot(), Quit(), Next();
 	XFontStruct *font;
 	XGCValues gcv;
 	static XtActionsRec actions[] = {
@@ -188,25 +185,22 @@ char **argv;
         return 0;
 }
 
-void
-closepl()
+void closepl()
 {
 	XFreeGC(dpy,gc);
 	XFreePixmap(dpy,pixmap);
 	XtDestroyWidget(toplevel);
 }
 
-void
-error(s)
-register char *s;
+__attribute__((noreturn)) void
+error(char *s)
 {
    (void) fflush(stdout);
    fprintf(stderr,"%s: %s\n",progname,s);
    exit(1);
 }
 
-void
-erase()
+void erase()
 /* Erase clears pixmap and window */
 {
    /* Clear pixmap */

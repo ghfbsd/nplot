@@ -8,15 +8,13 @@ extern int xmin, xmax, ymin, ymax;
 extern int xold, yold, xnew, ynew;
 extern int pxmax, pymax;
 extern char *progname;
-int vgeth();
 
-void doplot(footer,fatbase)
-   struct foot_info *footer;
-   int fatbase;
-{
+void doplot(
+   struct foot_info *footer,
+   int fatbase
+){
     register int c;
     int current_color;
-    void initpage();
 
     initpage(footer,fatbase);	 /* set up coordinate system */
     current_color = color((unsigned char)0,(unsigned char)0,(unsigned char)0);

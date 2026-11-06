@@ -2,7 +2,7 @@
 #include "xplot.h"
 #include "pat.h"
 
-area()
+void area()
 {
     int xfirst, yfirst, x1, y1;
     int npts, shade, saveop;

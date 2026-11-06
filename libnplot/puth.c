@@ -1,4 +1,3 @@
-
 /*LINTLIBRARY*/
 #include <stdio.h>
 
@@ -12,9 +11,7 @@
  * the VAX stores it (low byte, high byte)
  */
 
-sputh(w, iop)
-    int w;
-    register FILE *iop;
+int sputh(int w, register FILE *iop)
 {
     short temp=w;
 
@@ -23,9 +20,7 @@ sputh(w, iop)
     return(ferror(iop));
 }
 
-vputh(w, iop)
-    int w;
-    register FILE *iop;
+int vputh(int w, register FILE *iop)
 {
     short temp=w;
 

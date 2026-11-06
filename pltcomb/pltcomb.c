@@ -53,18 +53,198 @@
 
 static short f; /* Fatbase for adding to each file */
 
-int main(argc,argv)
-short argc; char **argv;
+int vputw(int, FILE *);
+int vputh(int, FILE *);
+int vgetw(FILE *);
+int vgeth(FILE *);
+	 
+void move(short x, short y, FILE *pout){
+ putc('m',pout);
+ puth(x,pout);
+ puth(y,pout);
+}
+
+void putfat(short f, FILE *pout){
+ if(f<=0) return;
+ putc('f',pout);
+ puth(f,pout);
+ return;
+}
+
+int scale(float value, char scale_factor)
+{  /* Return the given value as an integer, scaled by the scale factor
+      given as the argument */
+   switch (scale_factor) {
+      default:
+      case 'u':  /* Internal units.  Don't do anything.  */
+	 return value;
+      case 'i':  /* Convert inches to internal units */
+	 return value*DPI;
+      case 'c':  /* Convert centimeters to internal units */
+	 return value*DPI/CPI;
+   }
+}
+
+void transfer(FILE *pin, FILE *pout){
+ register int nread;
+ char tbuf[TSIZE];
+ do
+	{
+	 nread= fread(tbuf,1,TSIZE,pin);
+	 if(nread < 1) break;
+	 fwrite(tbuf,1,nread,pout);
+	}  while(nread == TSIZE);
+}
+
+void putvec(short x, short y, float xscale, float yscale, FILE *pin, FILE *pout){
+ register char c;
+ short header;
+ short count,i;
+ long wd, tsize;
+
+ while( (c=getc(pin)) != (char)-1 )
+	{
+	 switch(c)
+		{
+		 case 'm':
+		 case 'd':
+			putc(c,pout);
+			puth((int) ((geth(pin)+x)*xscale),pout);
+			puth((int) ((geth(pin)+y)*yscale),pout);
+			break;
+		 case 't':
+			/* Text.  Shrink size down by average of scale
+			   factors. */
+			putc(c,pout);
+			wd = getw(pin);
+			tsize = (long) ((float) (wd & 0x0000001f) * 
+						(xscale+yscale)/2.0 + 0.5);
+			wd = (wd & 0xffffffe0) | 
+			     (tsize < 1 ? 1 : tsize);
+			putw(wd,pout);
+			while( putc(getc(pin),pout) );
+			break;
+		 case 'c':
+			putc(c,pout);
+			puth(geth(pin),pout);
+			puth((int) ((geth(pin)+x)*xscale),pout);
+			puth((int) ((geth(pin)+y)*yscale),pout);
+			puth((int) (geth(pin)*(xscale+yscale)/2.0),pout);
+			break;
+		 case 'C':
+			putc(c,pout);
+			for (i=1; i <= 3; i++) putc(getc(pin),pout);
+			break;
+		 case 'a':
+		 case 'A':
+			putc(c,pout);
+			puth(geth(pin),pout);
+			count = geth(pin);
+			puth(count,pout);
+			for(i=0; i <= count; i++) {
+				puth((int) ((geth(pin)+x)*xscale),pout);
+				puth((int) ((geth(pin)+y)*yscale),pout);
+				}
+			break;
+		 case 'f':
+			putc(c,pout);
+			puth(f+geth(pin),pout);
+			break;
+		 case 'o':
+			putc(c,pout);
+			puth(geth(pin),pout);
+			break;
+		 case 'p':
+		 case 'n':
+		 case 'x':
+			putc(c,pout);
+			break;
+		 case 'w':
+			putc(c,pout);
+			puth((int) ((geth(pin)+x)*xscale),pout);
+			puth((int) ((geth(pin)+y)*yscale),pout);
+			puth((int) ((geth(pin)+x)*xscale),pout);
+			puth((int) ((geth(pin)+y)*yscale),pout);
+			break;
+		 case 'r':
+			if( (ftell(pout)&01) == 0 )
+				putc('n',pout);
+			putc('r',pout);
+			while( (header=geth(pin)) != ENDRAS )
+				{
+				 puth(header,pout);
+				 header &= 0377;
+				 while(header--)
+					puth(geth(pin),pout);
+				}
+			puth(ENDRAS,pout);
+			break;
+		 case 'e':
+		 case 'b':
+			break;	/* eat 'e' and 'b' */
+		}
+	}
+}
+
+/* This procedure puts a halfword backwards into the output stream.  This
+   is due to an historical botch in the definition of the pltfil(5) format.
+   Halfwords and fullwords were written in Vax format, with the leading and
+   trailing bytes swapped.  Anything written with a halfword or fullword
+   structure is, therefore, reversed, and this must be maintained for
+   compatibility's sake.  Similar treatment for puth, below.
+		G. Helffrich / Dec. 27'87
+*/
+
+#include	<ctype.h>
+
+int is_scale(char *cptr, float *x, float *y)
 {
- FILE *fopen(), *pin, *pout, *input;
+	double scale;
+	register char *s=cptr;
+	int xflag=0, yflag=0;
+
+	if(*s++ != '-') 	/* Better start with a minus */
+	   return(0);
+	if( isdigit(*s) || ( *s=='.' && isdigit(s[1])) ) {
+		if((scale=atof(s)) == 0.0)
+			return(0);
+		while(isdigit(*s) || *s=='.')
+			s++;
+		/* Look for trailing x or y for scaling in that dimension
+		   only. */
+		switch(*s) {
+			case '\0':
+				xflag= yflag= 1;
+				break;
+			case 'x':
+			case 'X':
+				xflag=1;
+				break;
+			case 'y':
+			case 'Y':
+				yflag=1;
+				break;
+			default:
+				return(0);
+		}
+		/* If present, better be last thing in the string. */
+		if ((*s != '\0') && (*++s != '\0'))
+		   return(0);
+		if(xflag) *x *= scale;
+		if(yflag) *y *= scale;
+		return(1);
+	}
+	return(0);
+}
+
+int main(int argc, char **argv) {
+ FILE *pin, *pout, *input;
  char line[LMAX], *lp, *filenam[50], *fp;
- char *fgets(), type, sc, str[2];
+ char type, sc, str[2];
  char *textptr;
  short x, y, s, o;
  float xscale, yscale, xfloat, yfloat, sfloat, ofloat, ffloat;
  short fileflag;
- long ftell();
- void putfat(), move();
 
  pout= stdout;
  x= y= 0; xscale= yscale= 1.0; o= 0; s= 2; type = 'v'; f = 0;
@@ -172,198 +352,4 @@ short argc; char **argv;
          }
       }
  fflush(pout);
-}
-
-scale(value,scale_factor)
-   float value;
-   char scale_factor;
-{  /* Return the given value as an integer, scaled by the scale factor
-      given as the argument */
-   switch (scale_factor) {
-      case 'u':  /* Internal units.  Don't do anything.  */
-	 return value;
-      case 'i':  /* Convert inches to internal units */
-	 return value*DPI;
-      case 'c':  /* Convert centimeters to internal units */
-	 return value*DPI/CPI;
-   }
-}
-	 
-void move(x,y,pout)
-register short x,y;
-register FILE *pout;
-{
- putc('m',pout);
- puth(x,pout);
- puth(y,pout);
-}
-
-void putfat(f,pout)
-short f;
-register FILE *pout;
-{
- if(f<=0) return;
- putc('f',pout);
- puth(f,pout);
- return;
-}
-
-transfer(pin,pout)
-register FILE *pin, *pout;
-{
- register int nread;
- char tbuf[TSIZE];
- do
-	{
-	 nread= fread(tbuf,1,TSIZE,pin);
-	 if(nread < 1) break;
-	 fwrite(tbuf,1,nread,pout);
-	}  while(nread == TSIZE);
-}
-
-putvec(x,y,xscale,yscale,pin,pout)
-register FILE *pin, *pout;
-short x,y;
-float xscale, yscale;
-{
- register char c;
- short header;
- short count,i;
- long ftell(), wd, tsize;
-
- while( (c=getc(pin)) != (char)-1 )
-	{
-	 switch(c)
-		{
-		 case 'm':
-		 case 'd':
-			putc(c,pout);
-			puth((int) ((geth(pin)+x)*xscale),pout);
-			puth((int) ((geth(pin)+y)*yscale),pout);
-			break;
-		 case 't':
-			/* Text.  Shrink size down by average of scale
-			   factors. */
-			putc(c,pout);
-			wd = getw(pin);
-			tsize = (long) ((float) (wd & 0x0000001f) * 
-						(xscale+yscale)/2.0 + 0.5);
-			wd = (wd & 0xffffffe0) | 
-			     (tsize < 1 ? 1 : tsize);
-			putw(wd,pout);
-			while( putc(getc(pin),pout) );
-			break;
-		 case 'c':
-			putc(c,pout);
-			puth(geth(pin),pout);
-			puth((int) ((geth(pin)+x)*xscale),pout);
-			puth((int) ((geth(pin)+y)*yscale),pout);
-			puth((int) (geth(pin)*(xscale+yscale)/2.0),pout);
-			break;
-		 case 'C':
-			putc(c,pout);
-			for (i=1; i <= 3; i++) putc(getc(pin),pout);
-			break;
-		 case 'a':
-		 case 'A':
-			putc(c,pout);
-			puth(geth(pin),pout);
-			count = geth(pin);
-			puth(count,pout);
-			for(i=0; i <= count; i++) {
-				puth((int) ((geth(pin)+x)*xscale),pout);
-				puth((int) ((geth(pin)+y)*yscale),pout);
-				}
-			break;
-		 case 'f':
-			putc(c,pout);
-			puth(f+geth(pin),pout);
-			break;
-		 case 'o':
-			putc(c,pout);
-			puth(geth(pin),pout);
-			break;
-		 case 'p':
-		 case 'n':
-		 case 'x':
-			putc(c,pout);
-			break;
-		 case 'w':
-			putc(c,pout);
-			puth((int) ((geth(pin)+x)*xscale),pout);
-			puth((int) ((geth(pin)+y)*yscale),pout);
-			puth((int) ((geth(pin)+x)*xscale),pout);
-			puth((int) ((geth(pin)+y)*yscale),pout);
-			break;
-		 case 'r':
-			if( (ftell(pout)&01) == 0 )
-				putc('n',pout);
-			putc('r',pout);
-			while( (header=geth(pin)) != ENDRAS )
-				{
-				 puth(header,pout);
-				 header &= 0377;
-				 while(header--)
-					puth(geth(pin),pout);
-				}
-			puth(ENDRAS,pout);
-			break;
-		 case 'e':
-		 case 'b':
-			break;	/* eat 'e' and 'b' */
-		}
-	}
-}
-
-/* This procedure puts a halfword backwards into the output stream.  This
-   is due to an historical botch in the definition of the pltfil(5) format.
-   Halfwords and fullwords were written in Vax format, with the leading and
-   trailing bytes swapped.  Anything written with a halfword or fullword
-   structure is, therefore, reversed, and this must be maintained for
-   compatibility's sake.  Similar treatment for puth, below.
-		G. Helffrich / Dec. 27'87
-*/
-
-#include	<ctype.h>
-
-int is_scale(cptr,x,y)
-	char *cptr;
-	float *x,*y;
-{
-	double scale, atof();
-	register char *s=cptr;
-	int xflag=0, yflag=0;
-
-	if(*s++ != '-') 	/* Better start with a minus */
-	   return(0);
-	if( isdigit(*s) || ( *s=='.' && isdigit(s[1])) ) {
-		if((scale=atof(s)) == 0.0)
-			return(0);
-		while(isdigit(*s) || *s=='.')
-			s++;
-		/* Look for trailing x or y for scaling in that dimension
-		   only. */
-		switch(*s) {
-			case '\0':
-				xflag= yflag= 1;
-				break;
-			case 'x':
-			case 'X':
-				xflag=1;
-				break;
-			case 'y':
-			case 'Y':
-				yflag=1;
-				break;
-			default:
-				return(0);
-		}
-		/* If present, better be last thing in the string. */
-		if ((*s != '\0') && (*++s != '\0'))
-		   return(0);
-		if(xflag) *x *= scale;
-		if(yflag) *y *= scale;
-		return(1);
-	}
-	return(0);
 }

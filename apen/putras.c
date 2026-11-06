@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include "apen.h"
-short vgeth();
 
 extern int xold, yold;
 extern float xscale, yscale;

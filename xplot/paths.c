@@ -11,8 +11,7 @@ static int nc=0;
 /*  putpoint
  *  Add a point to the current path, drawing it if it gets too big.
  */
-putpoint(x, y)
-	int x, y;
+void putpoint(int x, int y)
 {
     y = pymax - y;	/* Damn screen is upside down */
 
@@ -39,8 +38,7 @@ putpoint(x, y)
 /* drawpath
  * Draw the current path
  */
-void
-drawpath()
+void drawpath()
 {
 
     if (nc > 0) {
@@ -57,8 +55,7 @@ drawpath()
  * Set the current path operation (e.g. DRAW or FILL).
  * Return the old operation.
  */
-int setpathop(newop)
-    int newop;
+int setpathop(int newop)
 {
     int saveop = pathop;
     if (newop != pathop) {

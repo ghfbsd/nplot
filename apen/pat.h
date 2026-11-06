@@ -3,3 +3,5 @@ typedef u_long pattern[32];
 
 #define GRAYSTART	3
 #define GRAYNUM		6
+
+double greycolor(int);

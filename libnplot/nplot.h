@@ -14,3 +14,8 @@ extern struct fonts font_list;
 
 #define MIN(a,b)	((a)>(b)?(b):(a))
 #define MAX(a,b)	((a)>(b)?(a):(b))
+
+int sputh(int, FILE *);
+int vputh(int, FILE *);
+int sputw(int, FILE *);
+int vputw(int, FILE *);
