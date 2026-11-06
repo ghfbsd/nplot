@@ -1,0 +1,7 @@
+*.o
+*.a
+apen/apen
+plotdb/iplotdb
+plotdb/plotdb
+pltcomb/pltcomb
+xplot/xplot
