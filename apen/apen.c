@@ -19,6 +19,7 @@
 	           nplot font info.
             10/20 - Expand bounding box by +1 point so all lines included.
             11/26 - Recode to C23 standard.
+            11/26 - Stop using mktemp.
 */
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,6 +45,7 @@ int main(int argc, char **argv){
        fatbase=0, 
        copies=0;
     int epsfd;
+    FILE *epsnm = NULL;
     char *lpdev, *evar;
     struct foot_info footer;
 
@@ -172,24 +174,25 @@ int main(int argc, char **argv){
        printf("%%!PS-Adobe-3.0\n%%%%Pages: (atend)\n");
     else {
        /* Make temporary file, attach to stdout */
-       char *epsnm = mktemp("/tmp/apen.XXXXXX"); 
+       char *epsnm = tmpnam("/tmp/apen.XXXXXXXXX"); 
        epsfd = dup(1);
-       if (epsnm == NULL || epsfd == -1 ||
-          NULL == freopen(epsnm,"w+", stdout)) {
+       if (epsnm == NULL || epsfd == -1
+          || NULL == freopen(epsnm,"w+", stdout)
+       ) {
 	  fprintf(stderr, "%s: unable to make temporary output file\n", 
 		       progname);
 	  exit(1);
        }
        unlink(epsnm);
     }
-    fprintf(stdout, "%%%%Creator: apen (%s)\n", getenv("LOGNAME"));
-    fprintf(stdout, "%%%%CreationDate: %s", footer.fi_date);
+    printf("%%%%Creator: apen (%s)\n", getenv("LOGNAME"));
+    printf("%%%%CreationDate: %s", footer.fi_date);
        
     dumpfile(INITFILE);		/* Some Postscript procedures we need */
 
     /* Handle multiple copies if requested */
     if (copies > 0)
-       fprintf(stdout, "%%%%BeginSetup\n/#copies %d def\n%%%%EndSetup\n",
+       printf("%%%%BeginSetup\n/#copies %d def\n%%%%EndSetup\n",
 	  copies);
 
     while (argc--) {
@@ -215,7 +218,7 @@ int main(int argc, char **argv){
     if (embedded) {
        /* Insert magic lines, copy temp file to output */
        char bb[1024];
-       int n;
+       int n, nn = 0;
        (void)strcpy(bb, "%!PS-Adobe-3.1 EPSF-3.0\n");
        (void)write(epsfd, bb, strlen(bb));
        snprintf(bb, sizeof(bb), "%%%%BoundingBox: %d %d %d %d\n",
@@ -227,8 +230,11 @@ int main(int argc, char **argv){
        for(n = read(fileno(stdout), bb, sizeof(bb));
            n>0;
            n = read(fileno(stdout), bb, sizeof(bb))
-       )
+       ){
+          nn += 1;
           (void)write(epsfd, bb, n);
+       }
+       fprintf(stderr, "%d chunks written.\n",nn);
     }
 
     return(0);
@@ -263,10 +269,12 @@ void dumpfile(char *s){
 	exit(1);
     }
 
+    (void)fflush(stdout);
     while ((c = getc(f)) != EOF)
-	putchar(d=c);
-
-    if (d != '\n') putchar('\n'); (void) fclose(f); (void) fflush(stdout);
+       putchar(d=c);
+    if (d != '\n') putchar('\n');
+    (void) fflush(stdout);
+    (void) fclose(f);
 
     free(fn);
 }

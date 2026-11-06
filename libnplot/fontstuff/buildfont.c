@@ -44,7 +44,8 @@
  */
 
 #include <stdio.h>
-#include <strings.h>
+#include <stdlib.h>
+#include <string.h>
 #include "nplot.h"
 #include "font.h"
 
@@ -53,8 +54,7 @@
  *          the input file, ignoring newlines. (scanf won't work
  *          because it also ignores blanks)
  */
-int     scanint (n)
-int     n;
+int     scanint (int n)
 {
     char    buf[20];
     int     i, c;
@@ -71,9 +71,7 @@ int     n;
     return (atoi (buf));
 }
 
-main (argc, argv)
-int     argc;
-char  **argv;
+int main (int argc, char **argv)
 {
     int     ich, nch, i, j, x, y;
     int     font[MAX_CODE+1];

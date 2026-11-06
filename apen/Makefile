@@ -59,9 +59,9 @@ apen.o: apen.c Makefile
 			'-DLIB="${LIB}"' \
 	   apen.c
 
-install: apen npic
+install: apen
 	-install -m 775 -s -o ${OWNER} -g ${GROUP} apen ${DEST}
-	-install -m 775 -s -o ${OWNER} -g ${GROUP} npic ${DEST}
+#       -install -m 775 -s -o ${OWNER} -g ${GROUP} npic ${DEST}
 	-for i in ${LIBFILES}; do \
 	   install -c -m 664 -o ${OWNER} -g ${GROUP} $$i ${LIB}; \
 	done

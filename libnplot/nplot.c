@@ -344,13 +344,15 @@ void plpoly(short ix, short iy, int ik, int ipsymb, int shad)
     (void) vputh(vert[0][1], plotfile);
 }
 
+typedef union {
+      int integer;
+      struct txtinfo structure;
+   } fontquery;
+
 void gettxtinfo(
    struct txtinfo *where,
    enum sticode what,
-   union {
-      int integer;
-      struct txtinfo structure;
-   } *to_what
+   fontquery *to_what
 )
 
 /* Get the item in the text descriptor described by 'what' and return
@@ -834,9 +836,9 @@ c
 
 	   /* Make local copy of font info, and retrive current font
 	      size. */
-	   gettxtinfo(&txtinfo, tcopy, &linfo);
-	   gettxtinfo(&linfo, tsize, &isz);
-	   gettxtinfo(&linfo, theight, &font_v);
+	   gettxtinfo(&txtinfo, tcopy, (fontquery*)&linfo);
+	   gettxtinfo(&linfo, tsize, (fontquery*)&isz);
+	   gettxtinfo(&linfo, theight, (fontquery*)&font_v);
 	   xx = para[6] ;
 	   xinf = para[2] ;
 	   xsup = para[4] ;
@@ -884,9 +886,9 @@ c
 
 	   /* Make local copy of font info, and retrive current font
 	      size. */
-	   gettxtinfo(&txtinfo, tcopy, &linfo);
-	   gettxtinfo(&linfo, tsize, &isz);
-	   gettxtinfo(&linfo, theight, &font_v);
+	   gettxtinfo(&txtinfo, tcopy, (fontquery*)&linfo);
+	   gettxtinfo(&linfo, tsize, (fontquery*)&isz);
+	   gettxtinfo(&linfo, theight, (fontquery*)&font_v);
 	   yy = para[7] ;
 	   yinf=para[3] ;
 	   ysup=para[5];
@@ -932,9 +934,9 @@ c
 	   int isz, font_v;
 	   struct txtinfo linfo;
 
-	   gettxtinfo(&txtinfo, tcopy, &linfo);
-	   gettxtinfo(&txtinfo, tsize, &isz);
-	   gettxtinfo(&txtinfo, theight, &font_v);
+	   gettxtinfo(&txtinfo, tcopy, (fontquery*)&linfo);
+	   gettxtinfo(&txtinfo, tsize, (fontquery*)&isz);
+	   gettxtinfo(&txtinfo, theight, (fontquery*)&font_v);
 	   ix = (ixm + ix0 - txtsize(xst, l, linfo.font)*isz)/2 ;
 	   iy = iy0 - 2.2*font_v*isz ;
 	   pltext(ix,iy,&linfo,xst,l);
@@ -947,10 +949,10 @@ c
 	   int isz, font_v;
 	   struct txtinfo linfo;
 
-	   gettxtinfo(&txtinfo, tcopy, &linfo);
+	   gettxtinfo(&txtinfo, tcopy, (fontquery*)&linfo);
 	   settxtinfo(&linfo, torient, to_vertical);
-	   gettxtinfo(&linfo, tsize, &isz);
-	   gettxtinfo(&linfo, theight, &font_v);
+	   gettxtinfo(&linfo, tsize, (fontquery*)&isz);
+	   gettxtinfo(&linfo, theight, (fontquery*)&font_v);
 	   ix = (ix0mm - font_v*isz) ;
 	   iy = (iym + iy0 - txtsize(yst, l, linfo.font)*isz ) / 2 ;
 	   pltext(ix,iy,&linfo,yst,l);
@@ -962,8 +964,8 @@ c
 	   int isz, font_v;
 	   int l = MIN(lcap,strlen(cap));
 
-	   gettxtinfo(&txtinfo, tsize, &isz);
-	   gettxtinfo(&txtinfo, theight, &font_v);
+	   gettxtinfo(&txtinfo, tsize, (fontquery*)&isz);
+	   gettxtinfo(&txtinfo, theight, (fontquery*)&font_v);
 	   ix = (ixm + ix0 - txtsize(cap, lcap, txtinfo.font)*isz) / 2 ;
 	   iy = iym + 0.6*font_v*isz ;
 	   pltext(ix,iy,&txtinfo,cap,l);
